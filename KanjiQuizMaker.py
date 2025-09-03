@@ -30,6 +30,7 @@ class KanjiQuizMaker:
         self.create_registration_section(row=0, column=0)
         self.create_student_selection_section(row=1, column=0)
         self.create_worksheet_section(row=2, column=0)
+        self.create_grade_section(row=3, column=0)
 
     def create_registration_section(self, row, column):
         # メインフレーム（背景色と余白を調整）
@@ -132,11 +133,56 @@ class KanjiQuizMaker:
         )
         self.worksheet_button.grid(row=1, column=1, padx=(0, 5), pady=5, sticky='w')
 
+    def create_grade_section(self, row, column):
+        self.grade_frame = ctk.CTkFrame(self.root, corner_radius=10)
+        self.grade_frame.grid(row=row, column=column, padx=20, pady=20, sticky='ew')
+        self.grade_frame.grid_columnconfigure(0, weight=1)  # ← エントリーの列を広げる
+
+        self.grade_lft_frame = ctk.CTkFrame(self.grade_frame)
+        self.grade_lft_frame.grid(row=1, column=0, padx=5)
+
+        self.grade_rgt_frame = ctk.CTkFrame(self.grade_frame)
+        self.grade_rgt_frame.grid(row=1, column=1, padx=5)
+
+        self._create_grade_label()
+        self._create_grade_check_button()
+
+    def _create_grade_label(self):
+        label = ctk.CTkLabel(
+            self.grade_frame,
+            text='出題範囲選択',
+            font=ctk.CTkFont(size=18, weight='bold')
+        )
+        label.grid(row=0, column=0, columnspan=2, sticky='w', padx=5, pady=(10, 5))
+
+    def _create_grade_check_button(self):
+        frame_list = (
+            [self.grade_lft_frame] * 3 +
+            [self.grade_rgt_frame] * 3
+        )
+        self.grade_frame_check_button_value = {}
+        self.grade_frame_check_button = {}
+
+        for i, (key, frame) in enumerate(zip(self.setting_file.GRADES, frame_list)):
+            self.grade_frame_check_button_value[key] = ctk.BooleanVar(value=False)
+
+            self.grade_frame_check_button[key] = ctk.CTkCheckBox(
+                frame,
+                text=key,
+                variable=self.grade_frame_check_button_value[key],
+                command=self.event_check_button,
+                state=ctk.DISABLED
+            )
+            self.grade_frame_check_button[key].grid(row=i, column=0, sticky='w', pady=2)
+
     def get_student_name(self):
         return self.student_select_combobox_value.get()
 
     def get_worksheet_path(self):
-        return self.SelectWorksheetPath_Value.get()
+        return self.worksheet_value.get()
+
+    def get_grade(self, key):
+        return self.grade_frame_check_button_value[key].get()
 
     ################################################################################
     # イベントメソッド
@@ -186,6 +232,11 @@ class KanjiQuizMaker:
         # エントリーにパスを表示
         self.worksheet_value.set(os.path.relpath(path))
 
+    def event_check_button(self):
+        for key in self.setting_file.GRADES:
+            checked = self.get_grade(key)
+            self.setting_file.set_grade(self.get_student_name(), key, checked)
+
     def monitor(self):
         # 「選択」ボタンの有効化
         student_name = self.get_student_name()
@@ -193,6 +244,16 @@ class KanjiQuizMaker:
             self.worksheet_button.configure(state=ctk.NORMAL)
         else:
             self.worksheet_button.configure(state=ctk.DISABLED)
+
+        # 「出題範囲選択」のチェックボタンの有効化とチェックボタンの更新
+        grade_list = self.setting_file.get_grade_list(self.get_student_name())
+        for key, checked in zip(self.setting_file.GRADES, grade_list):
+            if len(student_name) > 0:
+                self.grade_frame_check_button[key].configure(state=ctk.NORMAL)
+            else:
+                self.grade_frame_check_button[key].configure(state=ctk.DISABLED)
+
+            self.grade_frame_check_button_value[key].set(checked)
 
         self.root.after(300, self.monitor)
 

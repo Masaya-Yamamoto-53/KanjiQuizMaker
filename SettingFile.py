@@ -72,5 +72,16 @@ class SettingFile:
     def get_student_list(self):
         return self.setting_file[self.STUDENT_NAME].values.tolist()
 
+    def get_grade_list(self, student_name):
+        return self.setting_file.loc[
+            self.setting_file[self.STUDENT_NAME] == student_name,
+            self.GRADES
+        ].values.flatten().tolist()
+
+    def set_grade(self, student_name, key, checked):
+        mask = self.setting_file[self.STUDENT_NAME] == student_name
+        self.setting_file.loc[mask, key] = checked
+        self.save_setting_file()
+
     def is_empty(self):
         return len(self.setting_file[self.STUDENT_NAME]) == 0
