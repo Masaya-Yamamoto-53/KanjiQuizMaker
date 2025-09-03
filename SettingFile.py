@@ -66,6 +66,14 @@ class SettingFile:
         # 設定ファイルを保存する
         self.save_setting_file()
 
+    def delete_student(self, student_name):
+        mask = self.setting_file[self.STUDENT_NAME] == student_name
+
+        self.setting_file = self.setting_file.loc[~mask].reset_index(drop=True)
+
+        # 設定ファイルを保存する
+        self.save_setting_file()
+
     def is_registered_student(self, student_name):
         return student_name in self.setting_file[self.STUDENT_NAME].values
 

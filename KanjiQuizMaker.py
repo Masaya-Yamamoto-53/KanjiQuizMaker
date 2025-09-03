@@ -9,6 +9,7 @@ from SettingFile import SettingFile
 class KanjiQuizMaker:
     ERROR_EMPTY_NAME = u'名前を入力してください'
     ERROR_ALREADY_REGISTERED = u'既に登録済みです'
+    WARNING_DELETE_STUDENT = u'本当に削除しますか'
 
     def __init__(self):
         # 設定ファイルを読み込む
@@ -73,6 +74,7 @@ class KanjiQuizMaker:
 
         self._create_selection_label()
         self._create_selection_combbox_and_button()
+        self._create_selection_delete_button()
 
     def _create_selection_label(self):
         label = ctk.CTkLabel(
@@ -96,6 +98,16 @@ class KanjiQuizMaker:
             , command=self.event_select_student
         )
         self.student_select_combobox.grid(row=1, column=0, padx=20, pady=5, sticky='ew')
+
+    def _create_selection_delete_button(self):
+        self.selection_delete_button = ctk.CTkButton(
+            self.selection_frame,
+            text='削除',
+            command=self.event_delete_student,
+            width=80,
+            height=36
+        )
+        self.selection_delete_button.grid(row=1, column=1, padx=(0, 5), pady=5, sticky='w')
 
     def create_worksheet_section(self, row, column):
         self.selection_frame = ctk.CTkFrame(self.root, corner_radius=10)
@@ -178,8 +190,14 @@ class KanjiQuizMaker:
     def get_student_name(self):
         return self.student_select_combobox_value.get()
 
+    def clear_student_name(self):
+        self.student_select_combobox_value.set('')
+
     def get_worksheet_path(self):
         return self.worksheet_value.get()
+
+    def set_worksheet_path(self, path):
+        return self.worksheet_value.set(path)
 
     def get_grade(self, key):
         return self.grade_frame_check_button_value[key].get()
@@ -230,7 +248,16 @@ class KanjiQuizMaker:
             return # キャンセル時は何もしない
 
         # エントリーにパスを表示
-        self.worksheet_value.set(os.path.relpath(path))
+        self.set_worksheet_path(os.path.relpath(path))
+
+    def event_delete_student(self):
+        student_name = self.get_student_name()
+        # 生徒名が有効なとき
+        if len(student_name) > 0:
+            msg = msgbox.askquestion('Warning', self.WARNING_DELETE_STUDENT, default='no')
+            if msg == 'yes':
+                self.setting_file.delete_student(student_name)
+                self.clear_student_name()
 
     def event_check_button(self):
         for key in self.setting_file.GRADES:
@@ -243,17 +270,23 @@ class KanjiQuizMaker:
         if len(student_name) > 0:
             self.worksheet_button.configure(state=ctk.NORMAL)
         else:
+            self.set_worksheet_path('')
             self.worksheet_button.configure(state=ctk.DISABLED)
 
         # 「出題範囲選択」のチェックボタンの有効化とチェックボタンの更新
-        grade_list = self.setting_file.get_grade_list(self.get_student_name())
-        for key, checked in zip(self.setting_file.GRADES, grade_list):
-            if len(student_name) > 0:
-                self.grade_frame_check_button[key].configure(state=ctk.NORMAL)
-            else:
-                self.grade_frame_check_button[key].configure(state=ctk.DISABLED)
+        if len(student_name) > 0:
+            grade_list = self.setting_file.get_grade_list(self.get_student_name())
+            for key, checked in zip(self.setting_file.GRADES, grade_list):
+                if len(student_name) > 0:
+                    self.grade_frame_check_button[key].configure(state=ctk.NORMAL)
+                else:
+                    self.grade_frame_check_button[key].configure(state=ctk.DISABLED)
 
-            self.grade_frame_check_button_value[key].set(checked)
+                self.grade_frame_check_button_value[key].set(checked)
+        else:
+            for key in self.setting_file.GRADES:
+                self.grade_frame_check_button[key].configure(state=ctk.DISABLED)
+                self.grade_frame_check_button_value[key].set(False)
 
         self.root.after(300, self.monitor)
 
