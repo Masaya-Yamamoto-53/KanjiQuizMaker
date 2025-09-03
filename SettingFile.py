@@ -68,3 +68,9 @@ class SettingFile:
 
     def is_registered_student(self, student_name):
         return student_name in self.setting_file[self.STUDENT_NAME].values
+
+    def get_student_list(self):
+        return self.setting_file[self.STUDENT_NAME].values.tolist()
+
+    def is_empty(self):
+        return len(self.setting_file[self.STUDENT_NAME]) == 0
