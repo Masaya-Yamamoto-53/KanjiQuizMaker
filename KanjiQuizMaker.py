@@ -32,6 +32,7 @@ class KanjiQuizMaker:
         self.create_student_selection_section(row=1, column=0)
         self.create_worksheet_section(row=2, column=0)
         self.create_grade_section(row=3, column=0)
+        self.create_number_of_problem()
 
     def create_registration_section(self, row, column):
         # メインフレーム（背景色と余白を調整）
@@ -187,6 +188,29 @@ class KanjiQuizMaker:
             )
             self.grade_frame_check_button[key].grid(row=i, column=0, sticky='w', pady=2)
 
+    def create_number_of_problem(self):
+        self.number_of_problem_frame = ctk.CTkFrame(self.grade_frame, corner_radius=10)
+        self.number_of_problem_frame.grid(row=1, column=2, padx=20, pady=20, sticky='ew')
+        self.number_of_problem_frame.grid_columnconfigure(0, weight=1)  # ← エントリーの列を広げる
+
+        label = ctk.CTkLabel(
+            self.number_of_problem_frame,
+            text='出題数',
+            font=ctk.CTkFont(size=18, weight='bold')
+        )
+        label.grid(row=0, column=0, columnspan=2, sticky='w', padx=5, pady=(10, 5))
+
+        self.number_of_problem_frame_value = ctk.StringVar()
+        self.number_of_problem_frame_value.set('')
+        self.number_of_problem_frame_value.trace_add('write', self.event_change_number_of_problem)
+        self.number_of_problem_frame_value_entry = ctk.CTkEntry(
+            self.number_of_problem_frame,
+            width=10,
+            textvariable=self.number_of_problem_frame_value,
+            state=ctk.DISABLED
+        )
+        self.number_of_problem_frame_value_entry.grid(row=1, column=0, padx=(5, 10), pady=5, sticky='ew')
+
     def get_student_name(self):
         return self.student_select_combobox_value.get()
 
@@ -264,6 +288,9 @@ class KanjiQuizMaker:
             checked = self.get_grade(key)
             self.setting_file.set_grade(self.get_student_name(), key, checked)
 
+    def event_change_number_of_problem(self, *args):
+        pass
+
     def monitor(self):
         # 「選択」ボタンの有効化
         student_name = self.get_student_name()
@@ -287,6 +314,13 @@ class KanjiQuizMaker:
             for key in self.setting_file.GRADES:
                 self.grade_frame_check_button[key].configure(state=ctk.DISABLED)
                 self.grade_frame_check_button_value[key].set(False)
+
+        # 「出題数」のエントリーを有効化
+        if len(student_name) > 0:
+            self.number_of_problem_frame_value_entry.configure(state=ctk.NORMAL)
+        else:
+            self.number_of_problem_frame_value_entry.configure(state=ctk.DISABLED)
+            self.number_of_problem_frame_value.set('')
 
         self.root.after(300, self.monitor)
 
