@@ -1,6 +1,8 @@
 # KanjiQuizMaker.py
+import os
 import customtkinter as ctk
 import tkinter.messagebox as msgbox
+import tkinter.filedialog as filedialog
 
 from SettingFile import SettingFile
 
@@ -27,6 +29,7 @@ class KanjiQuizMaker:
     def setup_widgets(self):
         self.create_registration_section(row=0, column=0)
         self.create_student_selection_section(row=1, column=0)
+        self.create_worksheet_section(row=2, column=0)
 
     def create_registration_section(self, row, column):
         # メインフレーム（背景色と余白を調整）
@@ -93,8 +96,47 @@ class KanjiQuizMaker:
         )
         self.student_select_combobox.grid(row=1, column=0, padx=20, pady=5, sticky='ew')
 
+    def create_worksheet_section(self, row, column):
+        self.selection_frame = ctk.CTkFrame(self.root, corner_radius=10)
+        self.selection_frame.grid(row=row, column=column, padx=20, pady=20, sticky='ew')
+        self.selection_frame.grid_columnconfigure(0, weight=1)  # ← エントリーの列を広げる
+
+        self._create_worksheet_label()
+        self._create_worksheet_entry_and_button()
+
+    def _create_worksheet_label(self):
+        label = ctk.CTkLabel(
+            self.selection_frame,
+            text='問題集選択',
+            font=ctk.CTkFont(size=18, weight='bold')
+        )
+        label.grid(row=0, column=0, columnspan=2, sticky='w', padx=5, pady=(10, 5))
+
+    def _create_worksheet_entry_and_button(self):
+        self.worksheet_value = ctk.StringVar()
+        self.worksheet_entry = ctk.CTkEntry(
+            self.selection_frame,
+            textvariable=self.worksheet_value,
+            height=36,
+            state='readonly'
+        )
+        self.worksheet_entry.grid(row=1, column=0, padx=(5, 10), pady=5, sticky='ew')
+
+        self.worksheet_button = ctk.CTkButton(
+            self.selection_frame,
+            text='選択',
+            command=self.event_select_worksheet,
+            width=80,
+            height=36,
+            state=ctk.DISABLED
+        )
+        self.worksheet_button.grid(row=1, column=1, padx=(0, 5), pady=5, sticky='w')
+
     def get_student_name(self):
         return self.student_select_combobox_value.get()
+
+    def get_worksheet_path(self):
+        return self.SelectWorksheetPath_Value.get()
 
     ################################################################################
     # イベントメソッド
@@ -128,7 +170,34 @@ class KanjiQuizMaker:
     def event_select_student(self, event):
         self.student_name = self.get_student_name()
 
+    # イベント発生条件：「選択」ボタンを押したとき
+    # 処理概要：CSVファイルを選択する
+    def event_select_worksheet(self):
+        # CSVファイルを選択
+        path = filedialog.askopenfilename(
+            title='問題集CSVを選択',
+            filetypes=[('CSVファイル', '*.csv')],
+            initialdir=os.path.abspath(os.path.dirname(__file__))
+        )
+
+        if not path:
+            return # キャンセル時は何もしない
+
+        # エントリーにパスを表示
+        self.worksheet_value.set(os.path.relpath(path))
+
+    def monitor(self):
+        # 「選択」ボタンの有効化
+        student_name = self.get_student_name()
+        if len(student_name) > 0:
+            self.worksheet_button.configure(state=ctk.NORMAL)
+        else:
+            self.worksheet_button.configure(state=ctk.DISABLED)
+
+        self.root.after(300, self.monitor)
+
     def run(self):
+        self.monitor()
         self.root.mainloop()
 
 if __name__ == "__main__":
