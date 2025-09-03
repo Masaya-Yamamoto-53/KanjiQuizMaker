@@ -90,7 +90,7 @@ class KanjiQuizMaker:
 
         self.student_select_combobox_value = ctk.StringVar(value=values[0])
         self.student_select_combobox = ctk.CTkOptionMenu(
-            self.root
+            self.selection_frame
             , values=values
             , variable=self.student_select_combobox_value
             , command=self.event_select_student
