@@ -11,10 +11,10 @@ class KanjiQuizMaker:
     ERROR_ALREADY_REGISTERED = u'既に登録済みです'
     WARNING_DELETE_STUDENT = u'本当に削除しますか'
 
-    def __init__(self):
-        # 設定ファイルを読み込む
-        self.setting_file = SettingFile()
+    CORNER_RADIUS = 10
 
+    def __init__(self):
+        self.setting_file = SettingFile() # 設定ファイルを読み込む
         self.setup_root()
         self.setup_widgets()
 
@@ -22,24 +22,13 @@ class KanjiQuizMaker:
         self.root = ctk.CTk()
         self.root.title('漢字プリントメーカー')
         self.root.resizable(False, False)
-        self.root.grid_columnconfigure(0, weight=0)
 
     def setup_widgets(self):
-        top_frame = ctk.CTkFrame(self.root, corner_radius=10)
+        top_frame = ctk.CTkFrame(self.root, corner_radius=self.CORNER_RADIUS)
         top_frame.grid(row=0, column=0, padx=5, pady=5, sticky='nesw')
-        top_frame.grid_columnconfigure(0, weight=0)
 
-        btm_frame = ctk.CTkFrame(self.root, corner_radius=10)
-        btm_frame.grid(row=1, column=0, padx=5, pady=5, sticky='nesw')
-        btm_frame.grid_columnconfigure(0, weight=0)
-
-        lft_frame = ctk.CTkFrame(top_frame, corner_radius=10)
+        lft_frame = ctk.CTkFrame(top_frame, corner_radius=self.CORNER_RADIUS)
         lft_frame.grid(row=0, column=0, padx=5, pady=5, sticky='nesw')
-        lft_frame.grid_columnconfigure(0, weight=0)
-
-        rgt_frame = ctk.CTkFrame(top_frame, corner_radius=10)
-        rgt_frame.grid(row=0, column=1, padx=5, pady=5, sticky='nesw')
-        rgt_frame.grid_columnconfigure(0, weight=0)
 
         # 生徒登録
         self.create_registration_section(lft_frame, row=0, column=0)
@@ -52,13 +41,18 @@ class KanjiQuizMaker:
         # プリント出力
         self.create_print_section(lft_frame, row=4, column=0)
 
+        rgt_frame = ctk.CTkFrame(top_frame, corner_radius=self.CORNER_RADIUS)
+        rgt_frame.grid(row=0, column=1, padx=5, pady=5, sticky='nesw')
+
+        btm_frame = ctk.CTkFrame(self.root, corner_radius=self.CORNER_RADIUS)
+        btm_frame.grid(row=1, column=0, padx=5, pady=5, sticky='nesw')
+
         # レポート
         self.create_report_section(btm_frame, row=0, column=0)
 
     def create_registration_section(self, frame, row, column):
-        frame = ctk.CTkFrame(frame, corner_radius=10)
+        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
         frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-        frame.grid_columnconfigure(0, weight=0)
 
         self._create_registration_label(frame, 0, 0)
         self._create_registration_entry_and_button(frame, 1, 0)
@@ -66,33 +60,32 @@ class KanjiQuizMaker:
     def _create_registration_label(self, frame, row, column):
         label = ctk.CTkLabel(
               frame
-            , text='生徒登録'
+            , text=u'生徒登録'
             , font=ctk.CTkFont(size=18, weight='bold')
         )
-        label.grid(row=row, column=column, columnspan=2, sticky='nw', padx=5, pady=(10, 5))
+        label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
 
     def _create_registration_entry_and_button(self, frame, row, column):
         self.student_name_entry = ctk.CTkEntry(
               frame
-            , placeholder_text='生徒名を入力'
+            , placeholder_text=u'生徒名を入力'
             , width=180
             , height=36
         )
-        self.student_name_entry.grid(row=row, column=column, padx=(5, 10), pady=5, sticky='nw')
+        self.student_name_entry.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
 
         self.student_name_register_button = ctk.CTkButton(
               frame
-            , text='登録'
+            , text=u'登録'
             , command=self.event_register_student
             , width=80
             , height=36
         )
-        self.student_name_register_button.grid(row=1, column=1, padx=(0, 5), pady=5, sticky='nw')
+        self.student_name_register_button.grid(row=1, column=1, padx=5, pady=5, sticky='nesw')
 
     def create_student_selection_section(self, frame, row, column):
-        frame = ctk.CTkFrame(frame, corner_radius=10)
+        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
         frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-        frame.grid_columnconfigure(0, weight=0)
 
         self._create_selection_label(frame, 0, 0)
         self._create_selection_combbox_and_button(frame, 1, 0)
@@ -104,7 +97,7 @@ class KanjiQuizMaker:
             , text='生徒選択'
             , font=ctk.CTkFont(size=18, weight='bold')
         )
-        label.grid(row=row, column=column, columnspan=2, sticky='nw', padx=5, pady=(10, 5))
+        label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
 
     def _create_selection_combbox_and_button(self, frame, row, column):
         if self.setting_file.is_empty():
@@ -119,23 +112,23 @@ class KanjiQuizMaker:
             , variable=self.student_select_combobox_value
             , command=self.event_select_student
             , width=180
+            , height=36
         )
-        self.student_select_combobox.grid(row=row, column=column, padx=5, pady=5, sticky='nw')
+        self.student_select_combobox.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
 
     def _create_selection_delete_button(self, frame, row, column):
         self.selection_delete_button = ctk.CTkButton(
-            frame,
-            text='削除',
-            command=self.event_delete_student,
-            width=80,
-            height=36
+              frame
+            , text=u'削除'
+            , command=self.event_delete_student
+            , width=80
+            , height=36
         )
-        self.selection_delete_button.grid(row=row, column=column, padx=5, pady=5, sticky='nw')
+        self.selection_delete_button.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
 
     def create_worksheet_section(self, frame, row, column):
-        frame = ctk.CTkFrame(frame, corner_radius=10)
+        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
         frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-        frame.grid_columnconfigure(0, weight=0)
 
         self._create_worksheet_label(frame, 0, 0)
         self._create_worksheet_entry_and_button(frame, 1, 0)
@@ -143,10 +136,10 @@ class KanjiQuizMaker:
     def _create_worksheet_label(self, frame, row, column):
         label = ctk.CTkLabel(
               frame
-            , text='問題集選択'
+            , text=u'問題集選択'
             , font=ctk.CTkFont(size=18, weight='bold')
         )
-        label.grid(row=row, column=column, columnspan=2, sticky='nw', padx=5, pady=(10, 5))
+        label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
 
     def _create_worksheet_entry_and_button(self, frame, row, column):
         self.worksheet_value = ctk.StringVar()
@@ -157,7 +150,7 @@ class KanjiQuizMaker:
             , height=36
             , state='readonly'
         )
-        self.worksheet_entry.grid(row=row, column=column, padx=(5, 10), pady=5, sticky='nw')
+        self.worksheet_entry.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
 
         self.worksheet_button = ctk.CTkButton(
               frame
@@ -167,26 +160,24 @@ class KanjiQuizMaker:
             , height=36
             , state=ctk.DISABLED
         )
-        self.worksheet_button.grid(row=1, column=1, padx=(0, 5), pady=5, sticky='nw')
+        self.worksheet_button.grid(row=1, column=1, padx=5, pady=5, sticky='nesw')
 
     def create_quiz_section(self, frame, row, column):
-        frame = ctk.CTkFrame(frame, corner_radius=10)
+        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
         frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-        frame.grid_columnconfigure(0, weight=0)
 
         self._create_grade_section(frame, row=0, column=0)
         self._create_number_of_problem(frame, row=0, column=1)
 
     def _create_grade_section(self, frame, row, column):
-        frame = ctk.CTkFrame(frame, corner_radius=10)
+        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
         frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-        frame.grid_columnconfigure(0, weight=0)
 
         lft_frame = ctk.CTkFrame(frame)
-        lft_frame.grid(row=row+1, column=0, padx=5)
+        lft_frame.grid(row=row+1, column=0, padx=5, pady=5, sticky='nesw')
 
         rgt_frame = ctk.CTkFrame(frame)
-        rgt_frame.grid(row=row+1, column=1, padx=5)
+        rgt_frame.grid(row=row+1, column=1, padx=5, pady=5, sticky='nesw')
 
         self._create_grade_label(frame, 0, 0)
         self._create_grade_check_button(lft_frame, rgt_frame)
@@ -197,13 +188,12 @@ class KanjiQuizMaker:
             text='出題範囲選択',
             font=ctk.CTkFont(size=18, weight='bold')
         )
-        label.grid(row=row, column=column, columnspan=2, sticky='nw', padx=5, pady=(10, 5))
+        label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
 
     def _create_grade_check_button(self, lft_frame, rgt_frame):
-        frame_list = (
-            [lft_frame] * 3 +
-            [rgt_frame] * 3
-        )
+        row_num = len(self.setting_file.GRADES) // 2
+        frame_list = ([lft_frame] * row_num + [rgt_frame] * row_num)
+
         self.grade_frame_check_button_value = {}
         self.grade_frame_check_button = {}
 
@@ -217,36 +207,33 @@ class KanjiQuizMaker:
                 , command=self.event_check_button
                 , state=ctk.DISABLED
             )
-            self.grade_frame_check_button[key].grid(row=i, column=0, sticky='nw', pady=2)
+            self.grade_frame_check_button[key].grid(row=i, column=0, sticky='nesw', pady=5)
 
     def _create_number_of_problem(self, frame, row, column):
-        pass
-        self.number_of_problem_frame = ctk.CTkFrame(frame, corner_radius=10)
-        self.number_of_problem_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nw')
-        self.number_of_problem_frame.grid_columnconfigure(0, weight=0)
+        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
+        frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
 
         label = ctk.CTkLabel(
-            self.number_of_problem_frame,
-            text='出題数',
-            font=ctk.CTkFont(size=18, weight='bold')
+              frame
+            , text='出題数'
+            , font=ctk.CTkFont(size=18, weight='bold')
         )
-        label.grid(row=0, column=0, columnspan=2, sticky='nw', padx=5, pady=(10, 5))
+        label.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
 
         self.number_of_problem_frame_value = ctk.StringVar()
         self.number_of_problem_frame_value.set('')
         self.number_of_problem_frame_value.trace_add('write', self.event_change_number_of_problem)
         self.number_of_problem_frame_value_entry = ctk.CTkEntry(
-            self.number_of_problem_frame,
-            width=50,
-            textvariable=self.number_of_problem_frame_value,
-            state=ctk.DISABLED
+              frame
+            , width=50
+            , textvariable=self.number_of_problem_frame_value
+            , state=ctk.DISABLED
         )
-        self.number_of_problem_frame_value_entry.grid(row=1, column=0, padx=(5, 10), pady=5, sticky='nw')
+        self.number_of_problem_frame_value_entry.grid(row=1, column=0, padx=(5, 10), pady=5, sticky='nesw')
 
     def create_print_section(self, frame, row, column):
-        frame = ctk.CTkFrame(frame, corner_radius=10)
+        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
         frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-        frame.grid_columnconfigure(0, weight=0)
 
         self._create_generate_button(frame, 0, 0)
         self._create_print_button(frame, 0, 1)
@@ -260,7 +247,7 @@ class KanjiQuizMaker:
             , height=36
             , state=ctk.DISABLED
         )
-        self.generate_button.grid(row=row, column=column, padx=(0, 5), pady=5, sticky='nw')
+        self.generate_button.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
 
     def _create_print_button(self, frame, row, column):
         self.print_button = ctk.CTkButton(
@@ -271,22 +258,24 @@ class KanjiQuizMaker:
             , height=36
             , state=ctk.DISABLED
         )
-        self.print_button.grid(row=row, column=column, padx=(0, 5), pady=5, sticky='nw')
+        self.print_button.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
 
     def create_report_section(self, frame, row, column):
         self._create_report_label(frame, 0, 0)
+        # 学年
+        self._create_grade_label_section(frame, 1, 0)
         # 出題数
-        self._create_output_section(frame, 1, 0)
+        self._create_output_section(frame, 1, 1)
         # 正解
-        self._create_correct_section(frame, 1, 1)
+        self._create_correct_section(frame, 1, 2)
         # 不正解
-        self._create_incorrect_section(frame, 1, 2)
+        self._create_incorrect_section(frame, 1, 3)
         # 1日後
-        self._create_day_section(frame, 1, 3)
+        self._create_day_section(frame, 1, 4)
         # 1週間後
-        self._create_week_section(frame, 1, 4)
+        self._create_week_section(frame, 1, 5)
         # 1ヶ月後
-        self._create_month_section(frame, 1, 5)
+        self._create_month_section(frame, 1, 6)
 
     def _create_report_label(self, frame, row, column):
         label = ctk.CTkLabel(
@@ -294,26 +283,35 @@ class KanjiQuizMaker:
             text='レポート',
             font=ctk.CTkFont(size=18, weight='bold')
         )
-        label.grid(row=row, column=column, columnspan=2, sticky='nw', padx=5, pady=(10, 5))
+        label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
+
+    def _create_grade_label_section(self, frame, row, column):
+        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
+        section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
+
+        label = ctk.CTkLabel(section_frame, text=u'学年', font=ctk.CTkFont(size=14))
+        label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
+
+        for i, grade_text in enumerate(self.setting_file.GRADES + [u'合計']):
+            grade_label = ctk.CTkLabel(section_frame, text=grade_text, font=ctk.CTkFont(size=14))
+            grade_label.grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
 
     def _create_output_section(self, frame, row, column):
-        section_frame = ctk.CTkFrame(frame, corner_radius=10)
+        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
         section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
 
         label = ctk.CTkLabel(section_frame, text=u'出題状況', font=ctk.CTkFont(size=14))
-        label.grid(row=0, column=0, columnspan=2, sticky='nw', padx=5, pady=(10, 5))
+        label.grid(row=0, column=0, columnspan=3, sticky='n', padx=5, pady=5)
 
+        # 出題数
         self.outnum_frame_value = {}
         self.outnum_frame_value_entry = {}
 
+        # 問題数
         self.tolnum_frame_value = {}
         self.tolnum_frame_value_entry = {}
 
         for i, grade_text in enumerate(self.setting_file.GRADES + [u'合計']):
-            # 学年
-            grade_label = ctk.CTkLabel(section_frame, text=grade_text, font=ctk.CTkFont(size=14))
-            grade_label.grid(row=i + 1, column=0, sticky='w', padx=5, pady=0)
-
             self.outnum_frame_value[i] = ctk.StringVar(value="")
             self.outnum_frame_value_entry[i] = ctk.CTkEntry(
                 section_frame,
@@ -321,10 +319,10 @@ class KanjiQuizMaker:
                 textvariable=self.outnum_frame_value[i],
                 state=ctk.DISABLED
             )
-            self.outnum_frame_value_entry[i].grid(row=i + 1, column=1, sticky='w', padx=5, pady=0)
+            self.outnum_frame_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
 
             slash_label = ctk.CTkLabel(section_frame, text='/', font=ctk.CTkFont(size=14))
-            slash_label.grid(row=i + 1, column=2, sticky='w', padx=5, pady=0)
+            slash_label.grid(row=i + 1, column=1, sticky='w', padx=5, pady=1)
 
             self.tolnum_frame_value[i] = ctk.StringVar(value="")
             self.tolnum_frame_value_entry[i] = ctk.CTkEntry(
@@ -333,14 +331,14 @@ class KanjiQuizMaker:
                 textvariable=self.tolnum_frame_value[i],
                 state=ctk.DISABLED
             )
-            self.tolnum_frame_value_entry[i].grid(row=i + 1, column=3, sticky='w', padx=5, pady=0)
+            self.tolnum_frame_value_entry[i].grid(row=i + 1, column=2, sticky='w', padx=5, pady=1)
 
     def _create_correct_section(self, frame, row, column):
-        section_frame = ctk.CTkFrame(frame, corner_radius=10)
+        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
         section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
 
         label = ctk.CTkLabel(section_frame, text=u'正解', font=ctk.CTkFont(size=14))
-        label.grid(row=0, column=0, columnspan=2, sticky='n', padx=5, pady=(10, 5))
+        label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
 
         self.correct_frame_value = {}
         self.correct_frame_value_entry = {}
@@ -353,14 +351,14 @@ class KanjiQuizMaker:
                 textvariable=self.correct_frame_value[i],
                 state=ctk.DISABLED
             )
-            self.correct_frame_value_entry[i].grid(row=i + 1, column=1, sticky='w', padx=5, pady=0)
+            self.correct_frame_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
 
     def _create_incorrect_section(self, frame, row, column):
-        section_frame = ctk.CTkFrame(frame, corner_radius=10)
+        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
         section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
 
         label = ctk.CTkLabel(section_frame, text=u'不正解', font=ctk.CTkFont(size=14))
-        label.grid(row=0, column=0, columnspan=2, sticky='n', padx=5, pady=(10, 5))
+        label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
 
         self.incorrect_frame_value = {}
         self.incorrect_frame_value_entry = {}
@@ -373,14 +371,14 @@ class KanjiQuizMaker:
                 textvariable=self.incorrect_frame_value[i],
                 state=ctk.DISABLED
             )
-            self.incorrect_frame_value_entry[i].grid(row=i + 1, column=1, sticky='w', padx=5, pady=0)
+            self.incorrect_frame_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
 
     def _create_day_section(self, frame, row, column):
-        section_frame = ctk.CTkFrame(frame, corner_radius=10)
+        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
         section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
 
         label = ctk.CTkLabel(section_frame, text=u'一日後', font=ctk.CTkFont(size=14))
-        label.grid(row=0, column=0, columnspan=2, sticky='n', padx=5, pady=(10, 5))
+        label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
 
         self.day_frame_value = {}
         self.day_frame_value_entry = {}
@@ -393,14 +391,14 @@ class KanjiQuizMaker:
                 textvariable=self.day_frame_value[i],
                 state=ctk.DISABLED
             )
-            self.day_frame_value_entry[i].grid(row=i + 1, column=1, sticky='w', padx=5, pady=0)
+            self.day_frame_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
 
     def _create_week_section(self, frame, row, column):
-        section_frame = ctk.CTkFrame(frame, corner_radius=10)
+        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
         section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
 
         label = ctk.CTkLabel(section_frame, text=u'一週間後', font=ctk.CTkFont(size=14))
-        label.grid(row=0, column=0, columnspan=2, sticky='n', padx=5, pady=(10, 5))
+        label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
 
         self.week_frame_value = {}
         self.week_frame_value_entry = {}
@@ -413,14 +411,14 @@ class KanjiQuizMaker:
                 textvariable=self.week_frame_value[i],
                 state=ctk.DISABLED
             )
-            self.week_frame_value_entry[i].grid(row=i + 1, column=1, sticky='w', padx=5, pady=0)
+            self.week_frame_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
 
     def _create_month_section(self, frame, row, column):
-        section_frame = ctk.CTkFrame(frame, corner_radius=10)
+        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
         section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
 
         label = ctk.CTkLabel(section_frame, text=u'一ヶ月後', font=ctk.CTkFont(size=14))
-        label.grid(row=0, column=0, columnspan=2, sticky='n', padx=5, pady=(10, 5))
+        label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
 
         self.month_frame_value = {}
         self.month_frame_value_entry = {}
@@ -433,7 +431,7 @@ class KanjiQuizMaker:
                 textvariable=self.month_frame_value[i],
                 state=ctk.DISABLED
             )
-            self.month_frame_value_entry[i].grid(row=i + 1, column=1, sticky='w', padx=5, pady=0)
+            self.month_frame_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
 
     def get_student_name(self):
         return self.student_select_combobox_value.get()
