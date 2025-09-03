@@ -80,6 +80,15 @@ class SettingFile:
     def get_student_list(self):
         return self.setting_file[self.STUDENT_NAME].values.tolist()
 
+    def get_worksheet_path(self, student_name):
+        mask = self.setting_file[self.STUDENT_NAME] == student_name
+        return self.setting_file.loc[mask, self.WORKSHEET_PATH].iloc[0]
+
+    def set_worksheet_path(self, student_name, path):
+        mask = self.setting_file[self.STUDENT_NAME] == student_name
+        self.setting_file.loc[mask, self.WORKSHEET_PATH] = path
+        self.save_setting_file()
+
     def get_grade_list(self, student_name):
         return self.setting_file.loc[
             self.setting_file[self.STUDENT_NAME] == student_name,
@@ -89,6 +98,15 @@ class SettingFile:
     def set_grade(self, student_name, key, checked):
         mask = self.setting_file[self.STUDENT_NAME] == student_name
         self.setting_file.loc[mask, key] = checked
+        self.save_setting_file()
+
+    def get_number_of_problem(self, student_name):
+        mask = self.setting_file[self.STUDENT_NAME] == student_name
+        return self.setting_file.loc[mask, self.NUMBER].iloc[0]
+
+    def set_number_of_problem(self, student_name, value):
+        mask = self.setting_file[self.STUDENT_NAME] == student_name
+        self.setting_file.loc[mask, self.NUMBER] = value
         self.save_setting_file()
 
     def is_empty(self):
