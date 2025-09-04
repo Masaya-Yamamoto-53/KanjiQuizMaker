@@ -86,7 +86,9 @@ class SettingFile:
 
     def set_worksheet_path(self, student_name, path):
         mask = self.setting_file[self.STUDENT_NAME] == student_name
+        self.setting_file[self.WORKSHEET_PATH] = self.setting_file[self.WORKSHEET_PATH].astype(str)
         self.setting_file.loc[mask, self.WORKSHEET_PATH] = path
+
         self.save_setting_file()
 
     def get_grade_list(self, student_name):

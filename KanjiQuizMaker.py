@@ -11,452 +11,319 @@ class KanjiQuizMaker:
     ERROR_ALREADY_REGISTERED = u'既に登録済みです'
     WARNING_DELETE_STUDENT = u'本当に削除しますか'
 
-    CORNER_RADIUS = 10
-
     def __init__(self):
+        self.root = ctk.CTk()
+        self.path_of_worksheet = ctk.StringVar() # 問題集のパス
+        self.number_of_problem = ctk.StringVar() # 出題数
+        self.number_of_problem.trace_add('write', self.event_change_number_of_problem)
+
         self.setting_file = SettingFile() # 設定ファイルを読み込む
         self.setup_root()
         self.setup_widgets()
 
     def setup_root(self):
-        self.root = ctk.CTk()
         self.root.title('漢字プリントメーカー')
         self.root.resizable(False, False)
 
     def setup_widgets(self):
-        top_frame = ctk.CTkFrame(self.root, corner_radius=self.CORNER_RADIUS)
-        top_frame.grid(row=0, column=0, padx=5, pady=5, sticky='nesw')
-
-        lft_frame = ctk.CTkFrame(top_frame, corner_radius=self.CORNER_RADIUS)
-        lft_frame.grid(row=0, column=0, padx=5, pady=5, sticky='nesw')
+        top_frame = self._create_frame(self.root, 0, 0, None)
+        lft_frame = self._create_frame(top_frame, 0, 0, None)
 
         # 生徒登録
-        self.create_registration_section(lft_frame, row=0, column=0)
+        self.widget_register_student(lft_frame, row=0, column=0)
         # 生徒選択
-        self.create_student_selection_section(lft_frame, row=1, column=0)
+        self.widget_select_student(lft_frame, row=1, column=0)
         # 問題集選択
-        self.create_worksheet_section(lft_frame, row=2, column=0)
+        self.widget_select_worksheet(lft_frame, row=2, column=0)
         # 出題範囲選択＆出題数
-        self.create_quiz_section(lft_frame, row=3, column=0)
+        self.widget_select_quiz(lft_frame, row=3, column=0)
         # プリント出力
         self.create_print_section(lft_frame, row=4, column=0)
 
-        rgt_frame = ctk.CTkFrame(top_frame, corner_radius=self.CORNER_RADIUS)
-        rgt_frame.grid(row=0, column=1, padx=5, pady=5, sticky='nesw')
-
-        btm_frame = ctk.CTkFrame(self.root, corner_radius=self.CORNER_RADIUS)
-        btm_frame.grid(row=1, column=0, padx=5, pady=5, sticky='nesw')
+        rgt_frame = self._create_frame(top_frame, 0, 1, None)
+        btm_frame = self._create_frame(self.root, 1, 0, 2)
 
         # レポート
-        self.create_report_section(btm_frame, row=0, column=0)
+        self.widget_report(btm_frame, row=0, column=0)
 
-    def create_registration_section(self, frame, row, column):
-        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
+    def widget_register_student(self, frame, row, column):
+        frame = self._create_frame(frame, row, column, None)
 
-        self._create_registration_label(frame, 0, 0)
-        self._create_registration_entry_and_button(frame, 1, 0)
+        self._create_section_label(frame, 0, 0, u'生徒登録')
+        self._create_entry(frame, 1, 0, 180, u'生徒名を入力', 'student_name_entry', None, 'normal')
+        self._create_button(frame, 1, 1, u'登録', self.event_register_student, 'register_student_button')
 
-    def _create_registration_label(self, frame, row, column):
-        label = ctk.CTkLabel(
-              frame
-            , text=u'生徒登録'
-            , font=ctk.CTkFont(size=18, weight='bold')
-        )
-        label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
+    def widget_select_student(self, frame, row, column):
+        frame = self._create_frame(frame, row, column, None)
 
-    def _create_registration_entry_and_button(self, frame, row, column):
-        self.student_name_entry = ctk.CTkEntry(
-              frame
-            , placeholder_text=u'生徒名を入力'
-            , width=180
-            , height=36
-        )
-        self.student_name_entry.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
+        self._create_section_label(frame, 0, 0, u'生徒選択')
+        self._create_combbox(frame, 1, 0)
+        self._create_button(frame, 1, 1, u'削除', self.event_delete_student, 'delete_student_button')
 
-        self.student_name_register_button = ctk.CTkButton(
-              frame
-            , text=u'登録'
-            , command=self.event_register_student
-            , width=80
-            , height=36
-        )
-        self.student_name_register_button.grid(row=1, column=1, padx=5, pady=5, sticky='nesw')
-
-    def create_student_selection_section(self, frame, row, column):
-        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-
-        self._create_selection_label(frame, 0, 0)
-        self._create_selection_combbox_and_button(frame, 1, 0)
-        self._create_selection_delete_button(frame, 1, 1)
-
-    def _create_selection_label(self, frame, row, column):
-        label = ctk.CTkLabel(
-              frame
-            , text='生徒選択'
-            , font=ctk.CTkFont(size=18, weight='bold')
-        )
-        label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
-
-    def _create_selection_combbox_and_button(self, frame, row, column):
+    def _create_combbox(self, frame, row, column):
         if self.setting_file.is_empty():
             values = [u'']
         else:
             values = self.setting_file.get_student_list()
 
-        self.student_select_combobox_value = ctk.StringVar(value=values[0])
-        self.student_select_combobox = ctk.CTkOptionMenu(
+        self.select_student_combobox_value = ctk.StringVar(value=values[0])
+        self.select_student_combobox = ctk.CTkOptionMenu(
               frame
             , values=values
-            , variable=self.student_select_combobox_value
+            , variable=self.select_student_combobox_value
             , command=self.event_select_student
             , width=180
             , height=36
         )
-        self.student_select_combobox.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
+        self.select_student_combobox.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
 
-    def _create_selection_delete_button(self, frame, row, column):
-        self.selection_delete_button = ctk.CTkButton(
+    def widget_select_worksheet(self, frame, row, column):
+        frame = self._create_frame(frame, row, column, None)
+
+        self._create_section_label(frame, 0, 0, u'問題集選択')
+        self._create_entry(
               frame
-            , text=u'削除'
-            , command=self.event_delete_student
-            , width=80
-            , height=36
+            , 1
+            , 0
+            , 180
+            , None
+            , 'worksheet_entry'
+            , self.path_of_worksheet
+            , 'readonly'
         )
-        self.selection_delete_button.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-
-    def create_worksheet_section(self, frame, row, column):
-        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-
-        self._create_worksheet_label(frame, 0, 0)
-        self._create_worksheet_entry_and_button(frame, 1, 0)
-
-    def _create_worksheet_label(self, frame, row, column):
-        label = ctk.CTkLabel(
+        self._create_button(
               frame
-            , text=u'問題集選択'
-            , font=ctk.CTkFont(size=18, weight='bold')
+            , 1
+            , 1
+            , u'選択'
+            , self.event_select_worksheet
+            , 'select_worksheet_button'
         )
-        label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
 
-    def _create_worksheet_entry_and_button(self, frame, row, column):
-        self.worksheet_value = ctk.StringVar()
-        self.worksheet_entry = ctk.CTkEntry(
-              frame
-            , textvariable=self.worksheet_value
-            , width=180
-            , height=36
-            , state='readonly'
-        )
-        self.worksheet_entry.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
+    def widget_select_quiz(self, frame, row, column):
+        frame = self._create_frame(frame, row, column, None)
 
-        self.worksheet_button = ctk.CTkButton(
-              frame
-            , text='選択'
-            , command=self.event_select_worksheet
-            , width=80
-            , height=36
-            , state=ctk.DISABLED
-        )
-        self.worksheet_button.grid(row=1, column=1, padx=5, pady=5, sticky='nesw')
-
-    def create_quiz_section(self, frame, row, column):
-        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-
-        self._create_grade_section(frame, row=0, column=0)
+        self._widget_select_grade(frame, row=0, column=0)
         self._create_number_of_problem(frame, row=0, column=1)
 
-    def _create_grade_section(self, frame, row, column):
-        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
+    def _widget_select_grade(self, frame, row, column):
+        frame = self._create_frame(frame, row, column, None)
 
-        lft_frame = ctk.CTkFrame(frame)
-        lft_frame.grid(row=row+1, column=0, padx=5, pady=5, sticky='nesw')
+        self._create_section_label(frame, 0, 0, u'出題範囲選択')
 
-        rgt_frame = ctk.CTkFrame(frame)
-        rgt_frame.grid(row=row+1, column=1, padx=5, pady=5, sticky='nesw')
+        lft_frame = self._create_frame(frame, 1, 0, None)
+        rgt_frame = self._create_frame(frame, 1, 1, None)
 
-        self._create_grade_label(frame, 0, 0)
-        self._create_grade_check_button(lft_frame, rgt_frame)
+        self._widget_select_grade_check_button(lft_frame, rgt_frame)
 
-    def _create_grade_label(self, frame, row, column):
-        label = ctk.CTkLabel(
-            frame,
-            text='出題範囲選択',
-            font=ctk.CTkFont(size=18, weight='bold')
-        )
-        label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
-
-    def _create_grade_check_button(self, lft_frame, rgt_frame):
+    def _widget_select_grade_check_button(self, lft_frame, rgt_frame):
         row_num = len(self.setting_file.GRADES) // 2
         frame_list = ([lft_frame] * row_num + [rgt_frame] * row_num)
 
-        self.grade_frame_check_button_value = {}
-        self.grade_frame_check_button = {}
+        self.grade_check_button_value = {}
+        self.grade_check_button = {}
 
         for i, (key, frame) in enumerate(zip(self.setting_file.GRADES, frame_list)):
-            self.grade_frame_check_button_value[key] = ctk.BooleanVar(value=False)
-
-            self.grade_frame_check_button[key] = ctk.CTkCheckBox(
+            self.grade_check_button_value[key] = ctk.BooleanVar(value=False)
+            self.grade_check_button[key] = ctk.CTkCheckBox(
                   frame
                 , text=key
-                , variable=self.grade_frame_check_button_value[key]
+                , variable=self.grade_check_button_value[key]
                 , command=self.event_check_button
                 , state=ctk.DISABLED
             )
-            self.grade_frame_check_button[key].grid(row=i, column=0, sticky='nesw', pady=5)
+            self.grade_check_button[key].grid(row=i, column=0, sticky='nesw', pady=5)
 
     def _create_number_of_problem(self, frame, row, column):
-        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
+        frame = self._create_frame(frame, row, column, None)
 
-        label = ctk.CTkLabel(
+        self._create_section_label(frame, 0, 0, u'出題数')
+        self._create_entry(
               frame
-            , text='出題数'
-            , font=ctk.CTkFont(size=18, weight='bold')
+            , 1
+            , 0
+            , 50
+            , None
+            , 'number_of_problem_entry'
+            , self.number_of_problem
+            , ctk.DISABLED
         )
-        label.grid(row=0, column=0, sticky='nw', padx=5, pady=5)
-
-        self.number_of_problem_frame_value = ctk.StringVar()
-        self.number_of_problem_frame_value.set('')
-        self.number_of_problem_frame_value.trace_add('write', self.event_change_number_of_problem)
-        self.number_of_problem_frame_value_entry = ctk.CTkEntry(
-              frame
-            , width=50
-            , textvariable=self.number_of_problem_frame_value
-            , state=ctk.DISABLED
-        )
-        self.number_of_problem_frame_value_entry.grid(row=1, column=0, padx=(5, 10), pady=5, sticky='nesw')
 
     def create_print_section(self, frame, row, column):
-        frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        frame.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
+        frame = self._create_frame(frame, row, column, None)
 
-        self._create_generate_button(frame, 0, 0)
-        self._create_print_button(frame, 0, 1)
+        self._create_button(frame, 0, 0, u'プリント作成', self.event_generate, 'generate_button')
+        self._create_button(frame, 0, 1, u'印刷', self.event_print, 'print_button')
 
-    def _create_generate_button(self, frame, row, column):
-        self.generate_button = ctk.CTkButton(
+
+    def _create_frame(self, frame, row, column, columnspan):
+        frame = ctk.CTkFrame(frame, corner_radius=10)
+        frame.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky='nesw')
+        return frame
+
+
+    def _create_section_label(self, frame, row, column, text):
+        label = ctk.CTkLabel(frame, text=text, font=ctk.CTkFont(family='Yu Gothic UI', size=18, weight='bold'))
+        label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
+
+    def _create_text_label(self, frame, row, column, text, columnspan=None):
+        label = ctk.CTkLabel(frame, text=text, font=ctk.CTkFont(family='Yu Gothic UI', size=14))
+        label.grid(row=row, column=column, columnspan=columnspan, sticky='n', padx=5, pady=5)
+
+    def _create_entry(
+              self
+            , frame
+            , row
+            , column
+            , width
+            , placeholder_text=None
+            , attr_name=None
+            , textvariable=None
+            , state='normal'):
+
+        entry = ctk.CTkEntry(
               frame
-            , text='プリント作成'
-            , command=self.event_generate
+            , placeholder_text=placeholder_text
+            , textvariable=textvariable
+            , width=width
+            , height=36
+            , state=state
+        )
+        entry.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
+        if attr_name:
+            setattr(self, attr_name, entry)
+
+    def _create_button(self, frame, row, column, text, command, attr_name):
+        button = ctk.CTkButton(
+              frame
+            , text=text
+            , command=command
             , width=80
             , height=36
             , state=ctk.DISABLED
         )
-        self.generate_button.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
+        button.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
+        setattr(self, attr_name, button)
 
-    def _create_print_button(self, frame, row, column):
-        self.print_button = ctk.CTkButton(
-              frame
-            , text='印刷'
-            , command=self.event_print
-            , width=80
-            , height=36
-            , state=ctk.DISABLED
-        )
-        self.print_button.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-
-    def create_report_section(self, frame, row, column):
-        self._create_report_label(frame, 0, 0)
+    def widget_report(self, frame, row, column):
+        self._create_section_label(frame, 0, 0, u'レポート')
         # 学年
         self._create_grade_label_section(frame, 1, 0)
         # 出題数
         self._create_output_section(frame, 1, 1)
-        # 正解
-        self._create_correct_section(frame, 1, 2)
-        # 不正解
-        self._create_incorrect_section(frame, 1, 3)
-        # 1日後
-        self._create_day_section(frame, 1, 4)
-        # 1週間後
-        self._create_week_section(frame, 1, 5)
-        # 1ヶ月後
-        self._create_month_section(frame, 1, 6)
 
-    def _create_report_label(self, frame, row, column):
-        label = ctk.CTkLabel(
-            frame,
-            text='レポート',
-            font=ctk.CTkFont(size=18, weight='bold')
-        )
-        label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
-
+        self._create_grade_value_section(frame, 1, 2, '正解', 'correct')
+        self._create_grade_value_section(frame, 1, 3, '不正解', 'incorrect')
+        self._create_grade_value_section(frame, 1, 4, '一日後', 'day')
+        self._create_grade_value_section(frame, 1, 5, '一週間後', 'week')
+        self._create_grade_value_section(frame, 1, 6, '一ヶ月後', 'month')
+#
     def _create_grade_label_section(self, frame, row, column):
-        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
+        frame = self._create_frame(frame, row, column, None)
 
-        label = ctk.CTkLabel(section_frame, text=u'学年', font=ctk.CTkFont(size=14))
-        label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
+        self._create_text_label(frame, 0, 0, u'学年')
 
         for i, grade_text in enumerate(self.setting_file.GRADES + [u'合計']):
-            grade_label = ctk.CTkLabel(section_frame, text=grade_text, font=ctk.CTkFont(size=14))
-            grade_label.grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
+            grade_label = ctk.CTkLabel(
+                  frame
+                , text=grade_text
+                , font=ctk.CTkFont(size=14)
+            )
+            grade_label.grid(row=i + 1, column=0, sticky='n', padx=5, pady=1)
 
     def _create_output_section(self, frame, row, column):
-        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
+        frame = self._create_frame(frame, row, column, None)
 
-        label = ctk.CTkLabel(section_frame, text=u'出題状況', font=ctk.CTkFont(size=14))
-        label.grid(row=0, column=0, columnspan=3, sticky='n', padx=5, pady=5)
+        self._create_text_label(frame, 0, 0, u'出題状況', 3)
 
         # 出題数
-        self.outnum_frame_value = {}
-        self.outnum_frame_value_entry = {}
+        self.outnum_value = {}
+        self.outnum_value_entry = {}
 
         # 問題数
-        self.tolnum_frame_value = {}
-        self.tolnum_frame_value_entry = {}
+        self.tolnum_value = {}
+        self.tolnum_value_entry = {}
 
         for i, grade_text in enumerate(self.setting_file.GRADES + [u'合計']):
-            self.outnum_frame_value[i] = ctk.StringVar(value="")
-            self.outnum_frame_value_entry[i] = ctk.CTkEntry(
-                section_frame,
-                width=50,
-                textvariable=self.outnum_frame_value[i],
-                state=ctk.DISABLED
+            self.outnum_value[i] = ctk.StringVar(value="")
+            self.outnum_value_entry[i] = ctk.CTkEntry(
+                  frame
+                , width=50
+                , textvariable=self.outnum_value[i]
+                , state=ctk.DISABLED
             )
-            self.outnum_frame_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
+            self.outnum_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
 
-            slash_label = ctk.CTkLabel(section_frame, text='/', font=ctk.CTkFont(size=14))
+            slash_label = ctk.CTkLabel(
+                  frame
+                , text='/'
+                , font=ctk.CTkFont(size=14)
+            )
             slash_label.grid(row=i + 1, column=1, sticky='w', padx=5, pady=1)
 
-            self.tolnum_frame_value[i] = ctk.StringVar(value="")
-            self.tolnum_frame_value_entry[i] = ctk.CTkEntry(
-                section_frame,
-                width=50,
-                textvariable=self.tolnum_frame_value[i],
-                state=ctk.DISABLED
+            self.tolnum_value[i] = ctk.StringVar(value="")
+            self.tolnum_value_entry[i] = ctk.CTkEntry(
+                  frame
+                , width=50
+                , textvariable=self.tolnum_value[i]
+                , state=ctk.DISABLED
             )
-            self.tolnum_frame_value_entry[i].grid(row=i + 1, column=2, sticky='w', padx=5, pady=1)
+            self.tolnum_value_entry[i].grid(row=i + 1, column=2, sticky='w', padx=5, pady=1)
 
-    def _create_correct_section(self, frame, row, column):
-        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
+    def _create_grade_value_section(self, frame, row, column, title, value_attr_prefix):
+        frame = self._create_frame(frame, row, column, None)
 
-        label = ctk.CTkLabel(section_frame, text=u'正解', font=ctk.CTkFont(size=14))
+        label = ctk.CTkLabel(
+              frame
+            , text=title
+            , font=ctk.CTkFont(size=14)
+        )
         label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
 
-        self.correct_frame_value = {}
-        self.correct_frame_value_entry = {}
+        # 動的に属性を作成
+        setattr(self, f"{value_attr_prefix}_value", {})
+        setattr(self, f"{value_attr_prefix}_value_entry", {})
+
+        value_dict = getattr(self, f"{value_attr_prefix}_value")
+        entry_dict = getattr(self, f"{value_attr_prefix}_value_entry")
 
         for i, grade_text in enumerate(self.setting_file.GRADES + [u'合計']):
-            self.correct_frame_value[i] = ctk.StringVar(value="")
-            self.correct_frame_value_entry[i] = ctk.CTkEntry(
-                section_frame,
-                width=50,
-                textvariable=self.correct_frame_value[i],
-                state=ctk.DISABLED
+            value_dict[i] = ctk.StringVar(value="")
+            entry_dict[i] = ctk.CTkEntry(
+                  frame
+                , width=50
+                , textvariable=value_dict[i]
+                , state=ctk.DISABLED
             )
-            self.correct_frame_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
-
-    def _create_incorrect_section(self, frame, row, column):
-        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
-
-        label = ctk.CTkLabel(section_frame, text=u'不正解', font=ctk.CTkFont(size=14))
-        label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
-
-        self.incorrect_frame_value = {}
-        self.incorrect_frame_value_entry = {}
-
-        for i, grade_text in enumerate(self.setting_file.GRADES + [u'合計']):
-            self.incorrect_frame_value[i] = ctk.StringVar(value="")
-            self.incorrect_frame_value_entry[i] = ctk.CTkEntry(
-                section_frame,
-                width=50,
-                textvariable=self.incorrect_frame_value[i],
-                state=ctk.DISABLED
-            )
-            self.incorrect_frame_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
-
-    def _create_day_section(self, frame, row, column):
-        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
-
-        label = ctk.CTkLabel(section_frame, text=u'一日後', font=ctk.CTkFont(size=14))
-        label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
-
-        self.day_frame_value = {}
-        self.day_frame_value_entry = {}
-
-        for i, grade_text in enumerate(self.setting_file.GRADES + [u'合計']):
-            self.day_frame_value[i] = ctk.StringVar(value="")
-            self.day_frame_value_entry[i] = ctk.CTkEntry(
-                section_frame,
-                width=50,
-                textvariable=self.day_frame_value[i],
-                state=ctk.DISABLED
-            )
-            self.day_frame_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
-
-    def _create_week_section(self, frame, row, column):
-        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
-
-        label = ctk.CTkLabel(section_frame, text=u'一週間後', font=ctk.CTkFont(size=14))
-        label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
-
-        self.week_frame_value = {}
-        self.week_frame_value_entry = {}
-
-        for i, grade_text in enumerate(self.setting_file.GRADES + [u'合計']):
-            self.week_frame_value[i] = ctk.StringVar(value="")
-            self.week_frame_value_entry[i] = ctk.CTkEntry(
-                section_frame,
-                width=50,
-                textvariable=self.week_frame_value[i],
-                state=ctk.DISABLED
-            )
-            self.week_frame_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
-
-    def _create_month_section(self, frame, row, column):
-        section_frame = ctk.CTkFrame(frame, corner_radius=self.CORNER_RADIUS)
-        section_frame.grid(row=row, column=column, padx=5, pady=5, sticky='nsew')
-
-        label = ctk.CTkLabel(section_frame, text=u'一ヶ月後', font=ctk.CTkFont(size=14))
-        label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
-
-        self.month_frame_value = {}
-        self.month_frame_value_entry = {}
-
-        for i, grade_text in enumerate(self.setting_file.GRADES + [u'合計']):
-            self.month_frame_value[i] = ctk.StringVar(value="")
-            self.month_frame_value_entry[i] = ctk.CTkEntry(
-                section_frame,
-                width=50,
-                textvariable=self.month_frame_value[i],
-                state=ctk.DISABLED
-            )
-            self.month_frame_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
+            entry_dict[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
 
     def get_student_name(self):
-        return self.student_select_combobox_value.get()
+        return self.select_student_combobox_value.get()
 
     def set_student_name(self, student_name):
-        self.student_select_combobox_value.set(student_name)
+        self.select_student_combobox_value.set(student_name)
 
     def get_worksheet_path(self):
-        return self.worksheet_value.get()
+        return self.path_of_worksheet.get()
 
     def set_worksheet_path(self, path):
-        return self.worksheet_value.set(path)
+        return self.path_of_worksheet.set(path)
 
     def get_grade(self, key):
-        return self.grade_frame_check_button_value[key].get()
+        return self.grade_check_button_value[key].get()
+
+    def set_grade(self, key, checked):
+        self.grade_check_button_value[key].set(checked)
 
     def get_number_of_problem(self):
-        num = self.number_of_problem_frame_value.get()
+        num = self.number_of_problem.get()
         try:
             return int(num)
         except (ValueError, TypeError):
             return 0
 
     def set_number_of_problem(self, num):
-        self.number_of_problem_frame_value.set(str(num))
+        self.number_of_problem.set(str(num))
 
     ################################################################################
     # イベントメソッド
@@ -465,7 +332,7 @@ class KanjiQuizMaker:
     # 処理概要：「生徒登録」エントリーに記入した名前を設定ファイルに登録する
     def event_register_student(self):
         # 「生徒登録」エントリーが空欄のとき、エラーを通知する
-        student_name = self.student_name_entry.get()
+        student_name = getattr(self, 'student_name_entry').get()
         if not student_name:
             msgbox.showerror('Error', self.ERROR_EMPTY_NAME)
             return
@@ -480,7 +347,7 @@ class KanjiQuizMaker:
 
         # 設定ファイルに生徒を登録した後に登録できたことを伝えるため、「生徒登録」エントリーを空欄にする
         # 煩わしいため、メッセージボックスは使用しない
-        self.student_name_entry.delete(0, ctk.END)
+        getattr(self, 'student_name_entry').delete(0, ctk.END)
 
         # 状態を更新
         self.change_status()
@@ -488,25 +355,6 @@ class KanjiQuizMaker:
     # イベント発生条件：「生徒選択」コンボボックスを押し、生徒を選択したとき
     # 処理概要：選択した生徒の設定に変更する
     def event_select_student(self, event):
-        # 状態を更新
-        self.change_status()
-
-    # イベント発生条件：「選択」ボタンを押したとき
-    # 処理概要：CSVファイルを選択する
-    def event_select_worksheet(self):
-        # CSVファイルを選択
-        path = filedialog.askopenfilename(
-            title='問題集CSVを選択',
-            filetypes=[('CSVファイル', '*.csv')],
-            initialdir=os.path.abspath(os.path.dirname(__file__))
-        )
-        # キャンセル時は何もしない
-        if not path:
-            return
-
-        # 設定ファイルに相対パスを登録する
-        self.setting_file.set_worksheet_path(self.get_student_name(), os.path.relpath(path))
-
         # 状態を更新
         self.change_status()
 
@@ -520,6 +368,25 @@ class KanjiQuizMaker:
             if msg == 'yes':
                 self.setting_file.delete_student(student_name)
                 self.set_student_name('')
+
+        # 状態を更新
+        self.change_status()
+
+    # イベント発生条件：「選択」ボタンを押したとき
+    # 処理概要：CSVファイルを選択する
+    def event_select_worksheet(self):
+        # CSVファイルを選択
+        path = filedialog.askopenfilename(
+              title='問題集CSVを選択'
+            , filetypes=[('CSVファイル', '*.csv')]
+            , initialdir=os.path.abspath(os.path.dirname(__file__))
+        )
+        # キャンセル時は何もしない
+        if not path:
+            return
+
+        # 設定ファイルに相対パスを登録する
+        self.setting_file.set_worksheet_path(self.get_student_name(), os.path.relpath(path))
 
         # 状態を更新
         self.change_status()
@@ -546,46 +413,51 @@ class KanjiQuizMaker:
         pass
 
     def change_status(self):
-        student_name = self.get_student_name()
-        if len(student_name) > 0:
-            # 「生徒選択」ボタンの有効化
-            self.worksheet_button.configure(state=ctk.NORMAL)
-        else:
-            # 「生徒選択」エントリーを初期化
-            self.set_worksheet_path('')
-            # 「生徒選択」ボタンの無効化
-            self.worksheet_button.configure(state=ctk.DISABLED)
+        # 「登録」ボタンを有効化
+        getattr(self, 'register_student_button').configure(state=ctk.NORMAL)
 
         # 「生徒選択」エントリーを更新する
-        self.student_select_combobox.configure(values=self.setting_file.get_student_list())
+        self.select_student_combobox.configure(values=self.setting_file.get_student_list())
+
+        student_name = self.get_student_name()
+        if len(student_name) > 0:
+            # 「削除」ボタンを有効化
+            getattr(self, 'delete_student_button').configure(state=ctk.NORMAL)
+        else:
+            # 「削除」ボタンを無効化
+            getattr(self, 'delete_student_button').configure(state=ctk.DISABLED)
 
         if len(student_name) > 0:
+            # 「生徒選択」ボタンの有効化
+            getattr(self, 'select_worksheet_button').configure(state=ctk.NORMAL)
             # 「問題集選択」エントリーにパスを表示する
             self.set_worksheet_path(self.setting_file.get_worksheet_path(student_name))
         else:
-            # 「問題集選択」エントリーを書記か
-            self.set_worksheet_path('')
+            # 「生徒選択」ボタンの無効化
+            getattr(self, 'select_worksheet_button').configure(state=ctk.DISABLED)
+            # 「問題集選択」エントリーを初期化
+            self.set_worksheet_path('')#
 
         if len(student_name) > 0:
             # 「出題範囲選択」のチェックボタンの有効化とチェックボタンの更新
             grade_list = self.setting_file.get_grade_list(self.get_student_name())
             for key, checked in zip(self.setting_file.GRADES, grade_list):
-                self.grade_frame_check_button[key].configure(state=ctk.NORMAL)
-                self.grade_frame_check_button_value[key].set(checked)
+                self.grade_check_button[key].configure(state=ctk.NORMAL)
+                self.set_grade(key, checked)
         else:
             for key in self.setting_file.GRADES:
-                self.grade_frame_check_button[key].configure(state=ctk.DISABLED)
-                self.grade_frame_check_button_value[key].set(False)
+                self.grade_check_button[key].configure(state=ctk.DISABLED)
+                self.set_grade(key, False)
 
         if len(student_name) > 0:
             # 「出題数」のエントリーを有効化
-            self.number_of_problem_frame_value_entry.configure(state=ctk.NORMAL)
-            self.number_of_problem_frame_value.set(self.setting_file.get_number_of_problem(student_name))
+            getattr(self, 'number_of_problem_entry').configure(state=ctk.NORMAL)
+            self.number_of_problem.set(self.setting_file.get_number_of_problem(student_name))
         else:
             # 「出題数」のエントリーを無効化
-            self.number_of_problem_frame_value_entry.configure(state=ctk.DISABLED)
+            getattr(self, 'number_of_problem_entry').configure(state=ctk.DISABLED)
             # 「出題数」のエントリーを初期化
-            self.number_of_problem_frame_value.set('')
+            self.number_of_problem.set('')
 
     def run(self):
         # 状態を更新
