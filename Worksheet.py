@@ -96,14 +96,15 @@ class Worksheet:
 
         return error_message
 
-    # 問題集から指定した学年の問題を取得する
-    def get_problem_count_for_grade(self, grade):
-        return int((self.worksheet[self.Grade] == grade).sum())
-
     # 指定した学年と結果に一致する問題数を取得する
-    def get_problem_count_for_grade_and_result(self, grade, result):
+    def get_count_by(self, grade, result=None):
         df = self.worksheet
-        return int(((df[self.Grade] == grade) & (df[self.Result] == result)).sum())
+        if result is None:
+            # 学年だけ指定された場合
+            return int((df[self.Grade] == grade).sum())
+        else:
+            # 学年と結果の両方が指定された場合
+            return int(((df[self.Grade] == grade) & (df[self.Result] == result)).sum())
 
     # デバッグ情報を標準出力する
     def print_info(self, msg):

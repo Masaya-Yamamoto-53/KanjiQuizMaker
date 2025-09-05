@@ -462,16 +462,14 @@ class KanjiQuizMaker:
     def update_report(self):
         # マーク種別と対応する取得関数のマッピング
         mark_map = {
-            'outnum': lambda grade: self.worksheet.get_problem_count_for_grade(grade) -
-                                    self.worksheet.get_problem_count_for_grade_and_result(grade, self.worksheet.NotMk),
-            'tolnum': lambda grade: self.worksheet.get_problem_count_for_grade(grade),
-            'correct': lambda grade: self.worksheet.get_problem_count_for_grade_and_result(grade,
-                                                                                           self.worksheet.CrctMk),
-            'incorrect': lambda grade: self.worksheet.get_problem_count_for_grade_and_result(grade,
-                                                                                             self.worksheet.IncrctMk),
-            'day': lambda grade: self.worksheet.get_problem_count_for_grade_and_result(grade, self.worksheet.DayMk),
-            'week': lambda grade: self.worksheet.get_problem_count_for_grade_and_result(grade, self.worksheet.WeekMk),
-            'month': lambda grade: self.worksheet.get_problem_count_for_grade_and_result(grade, self.worksheet.MonthMk)
+            'outnum': lambda grade: self.worksheet.get_count_by(grade) -
+                                    self.worksheet.get_count_by(grade, self.worksheet.NotMk),
+            'tolnum': lambda grade: self.worksheet.get_count_by(grade),
+            'correct': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.CrctMk),
+            'incorrect': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.IncrctMk),
+            'day': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.DayMk),
+            'week': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.WeekMk),
+            'month': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.MonthMk)
         }
 
         # 合計値の初期化
