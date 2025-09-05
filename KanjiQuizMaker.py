@@ -247,72 +247,48 @@ class KanjiQuizMaker:
 
     def _create_output_section(self, frame, row, column):
         frame = self._create_frame(frame, row, column, None)
-
-        self._create_text_label(frame, 0, 0, u'出題状況', 3)
-
-        # 出題数
-        self.outnum_value = {}
-        self.outnum_value_entry = {}
-
-        # 問題数
-        self.tolnum_value = {}
-        self.tolnum_value_entry = {}
-
-        for i, grade_text in enumerate(self.setting_file.GRADES + [u'合計']):
-            self.outnum_value[i] = ctk.StringVar(value="")
-            self.outnum_value_entry[i] = ctk.CTkEntry(
-                  frame
-                , width=50
-                , textvariable=self.outnum_value[i]
-                , justify='right'
-                , state='readonly'
-            )
-            self.outnum_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
-
-            slash_label = ctk.CTkLabel(
-                  frame
-                , text='/'
-                , font=ctk.CTkFont(size=14)
-            )
-            slash_label.grid(row=i + 1, column=1, sticky='w', padx=5, pady=1)
-
-            self.tolnum_value[i] = ctk.StringVar(value="")
-            self.tolnum_value_entry[i] = ctk.CTkEntry(
-                  frame
-                , width=50
-                , textvariable=self.tolnum_value[i]
-                , justify='right'
-                , state='readonly'
-            )
-            self.tolnum_value_entry[i].grid(row=i + 1, column=2, sticky='w', padx=5, pady=1)
+        self._create_text_label(frame, 0, 0, '出題状況', 3)
+        self._create_grade_entries(frame, start_row=1, column_offset=0, value_prefixes=['outnum', 'tolnum'], show_slash=True)
 
     def _create_grade_value_section(self, frame, row, column, title, value_attr_prefix):
         frame = self._create_frame(frame, row, column, None)
-
-        label = ctk.CTkLabel(
-              frame
-            , text=title
-            , font=ctk.CTkFont(size=14)
-        )
+        label = ctk.CTkLabel(frame, text=title, font=ctk.CTkFont(size=14))
         label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
+        self._create_grade_entries(frame, start_row=1, column_offset=0, value_prefixes=[value_attr_prefix])
 
-        # 動的に属性を作成
-        setattr(self, f"{value_attr_prefix}_value", {})
-        setattr(self, f"{value_attr_prefix}_value_entry", {})
+    def _create_grade_entries(self, frame, start_row, column_offset, value_prefixes, show_slash=False):
+        """
+        学年ごとの StringVar と CTkEntry を生成する共通関数。
+        value_prefixes: ['outnum', 'tolnum'] や ['correct'] のようなリスト
+        show_slash: True の場合、1列目と2列目の間に '/' を表示
+        """
+        for prefix in value_prefixes:
+            setattr(self, f"{prefix}_value", {})
+            setattr(self, f"{prefix}_value_entry", {})
 
-        value_dict = getattr(self, f"{value_attr_prefix}_value")
-        entry_dict = getattr(self, f"{value_attr_prefix}_value_entry")
+        for i, grade_text in enumerate(self.setting_file.GRADES + ['合計']):
+            for j, prefix in enumerate(value_prefixes):
+                value_dict = getattr(self, f"{prefix}_value")
+                entry_dict = getattr(self, f"{prefix}_value_entry")
 
-        for i, grade_text in enumerate(self.setting_file.GRADES + [u'合計']):
-            value_dict[i] = ctk.StringVar(value="")
-            entry_dict[i] = ctk.CTkEntry(
-                  frame
-                , width=50
-                , textvariable=value_dict[i]
-                , justify='right'
-                , state='readonly'
-            )
-            entry_dict[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
+                value_dict[i] = ctk.StringVar(value="")
+                entry = ctk.CTkEntry(
+                    frame,
+                    width=50,
+                    textvariable=value_dict[i],
+                    justify='right',
+                    state='readonly'
+                )
+                entry.grid(row=start_row + i, column=column_offset + j * 2, sticky='w', padx=5, pady=1)
+                entry_dict[i] = entry
+
+            if show_slash and len(value_prefixes) == 2:
+                slash_label = ctk.CTkLabel(
+                    frame,
+                    text='/',
+                    font=ctk.CTkFont(size=14)
+                )
+                slash_label.grid(row=start_row + i, column=column_offset + 1, sticky='w', padx=5, pady=1)
 
     def get_student_name(self):
         return self.select_student_combobox_value.get()
@@ -484,53 +460,34 @@ class KanjiQuizMaker:
                 self.update_report()
 
     def update_report(self):
-        # 合計値の初期化
-        total_counts = {
-            'outnum': 0,
-            'tolnum': 0,
-            'correct': 0,
-            'incorrect': 0,
-            'day': 0,
-            'week': 0,
-            'month': 0
-        }
-
-        # マーク種別と対応する属性名のマッピング
+        # マーク種別と対応する取得関数のマッピング
         mark_map = {
-            'outnum': self.worksheet.NotMk,
-            'correct': self.worksheet.CrctMk,
-            'incorrect': self.worksheet.IncrctMk,
-            'day': self.worksheet.DayMk,
-            'week': self.worksheet.WeekMk,
-            'month': self.worksheet.MonthMk
+            'outnum': lambda grade: self.worksheet.get_problem_count_for_grade(grade) -
+                                    self.worksheet.get_problem_count_for_grade_and_result(grade, self.worksheet.NotMk),
+            'tolnum': lambda grade: self.worksheet.get_problem_count_for_grade(grade),
+            'correct': lambda grade: self.worksheet.get_problem_count_for_grade_and_result(grade,
+                                                                                           self.worksheet.CrctMk),
+            'incorrect': lambda grade: self.worksheet.get_problem_count_for_grade_and_result(grade,
+                                                                                             self.worksheet.IncrctMk),
+            'day': lambda grade: self.worksheet.get_problem_count_for_grade_and_result(grade, self.worksheet.DayMk),
+            'week': lambda grade: self.worksheet.get_problem_count_for_grade_and_result(grade, self.worksheet.WeekMk),
+            'month': lambda grade: self.worksheet.get_problem_count_for_grade_and_result(grade, self.worksheet.MonthMk)
         }
 
-        for grade in range(self.worksheet.GradeRange[0], self.worksheet.GradeRange[-1] + 1):
-            index = grade - 1
+        # 合計値の初期化
+        total_counts = {key: 0 for key in mark_map}
 
-            # 出題数（NotMk）
-            count = self.worksheet.get_problem_count_for_grade_and_result(grade, mark_map['outnum'])
-            self.outnum_value[index].set(count)
-            total_counts['outnum'] += count
-
-            # 問題数（全体）
-            count = self.worksheet.get_problem_count_for_grade(grade)
-            self.tolnum_value[index].set(count)
-            total_counts['tolnum'] += count
-
-            # その他のマーク種別
-            for key in ['correct', 'incorrect', 'day', 'week', 'month']:
-                count = self.worksheet.get_problem_count_for_grade_and_result(grade, mark_map[key])
-                getattr(self, f'{key}_value')[index].set(count)
+        # 学年ごとの更新
+        for i, grade in enumerate(range(self.worksheet.GradeRange[0], self.worksheet.GradeRange[-1] + 1)):
+            for key, count_func in mark_map.items():
+                count = count_func(grade)
+                getattr(self, f"{key}_value")[i].set(count)
                 total_counts[key] += count
 
-        # 合計値を末尾にセット（index = 学年数）
-        last_index = self.worksheet.GradeRange[-1]
-        self.outnum_value[last_index].set(total_counts['outnum'])
-        self.tolnum_value[last_index].set(total_counts['tolnum'])
-
-        for key in ['correct', 'incorrect', 'day', 'week', 'month']:
-            getattr(self, f'{key}_value')[last_index].set(total_counts[key])
+        # 合計欄（末尾）にセット
+        last_index = len(self.setting_file.GRADES)  # '合計' のインデックス
+        for key in mark_map:
+            getattr(self, f"{key}_value")[last_index].set(total_counts[key])
 
     def run(self):
         # 状態を更新
