@@ -5,6 +5,7 @@ import tkinter.messagebox as msgbox
 import tkinter.filedialog as filedialog
 
 from SettingFile import SettingFile
+from Worksheet import Worksheet
 
 class KanjiQuizMaker:
     ERROR_EMPTY_NAME = u'名前を入力してください'
@@ -17,7 +18,9 @@ class KanjiQuizMaker:
         self.number_of_problem = ctk.StringVar() # 出題数
         self.number_of_problem.trace_add('write', self.event_change_number_of_problem)
 
-        self.setting_file = SettingFile() # 設定ファイルを読み込む
+        self.setting_file = SettingFile() # 設定ファイル
+        self.worksheet = Worksheet(True)  # 問題集
+
         self.setup_root()
         self.setup_widgets()
 
@@ -41,6 +44,10 @@ class KanjiQuizMaker:
         self.create_print_section(lft_frame, row=4, column=0)
 
         rgt_frame = self._create_frame(top_frame, 0, 1, None)
+
+        # 採点
+        self.widget_score(rgt_frame, row=0, column=0)
+
         btm_frame = self._create_frame(self.root, 1, 0, 2)
 
         # レポート
@@ -205,6 +212,13 @@ class KanjiQuizMaker:
         button.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
         setattr(self, attr_name, button)
 
+    def widget_score(self, frame, row, column):
+        self._create_section_label(frame, 0, 0, u'採点')
+
+        top_frame = self._create_frame(frame, 0, 0, None)
+        btm_frame = self._create_frame(frame, 1, 0, None)
+        menu_frame = self._create_frame(frame, 2, 0, None)
+
     def widget_report(self, frame, row, column):
         self._create_section_label(frame, 0, 0, u'レポート')
         # 学年
@@ -250,7 +264,8 @@ class KanjiQuizMaker:
                   frame
                 , width=50
                 , textvariable=self.outnum_value[i]
-                , state=ctk.DISABLED
+                , justify='right'
+                , state='readonly'
             )
             self.outnum_value_entry[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
 
@@ -266,7 +281,8 @@ class KanjiQuizMaker:
                   frame
                 , width=50
                 , textvariable=self.tolnum_value[i]
-                , state=ctk.DISABLED
+                , justify='right'
+                , state='readonly'
             )
             self.tolnum_value_entry[i].grid(row=i + 1, column=2, sticky='w', padx=5, pady=1)
 
@@ -293,7 +309,8 @@ class KanjiQuizMaker:
                   frame
                 , width=50
                 , textvariable=value_dict[i]
-                , state=ctk.DISABLED
+                , justify='right'
+                , state='readonly'
             )
             entry_dict[i].grid(row=i + 1, column=0, sticky='w', padx=5, pady=1)
 
@@ -457,7 +474,63 @@ class KanjiQuizMaker:
             # 「出題数」のエントリーを無効化
             getattr(self, 'number_of_problem_entry').configure(state=ctk.DISABLED)
             # 「出題数」のエントリーを初期化
-            self.number_of_problem.set('')
+
+        # 問題集の読み込み
+        if not self.worksheet.is_worksheet_loaded(self.path_of_worksheet.get()):
+            # 問題集の読み込みに成功
+            (errnum, _) = self.worksheet.load_worksheet(self.path_of_worksheet.get())
+            if errnum == 0:
+                # レポートの更新
+                self.update_report()
+
+    def update_report(self):
+        # 合計値の初期化
+        total_counts = {
+            'outnum': 0,
+            'tolnum': 0,
+            'correct': 0,
+            'incorrect': 0,
+            'day': 0,
+            'week': 0,
+            'month': 0
+        }
+
+        # マーク種別と対応する属性名のマッピング
+        mark_map = {
+            'outnum': self.worksheet.NotMk,
+            'correct': self.worksheet.CrctMk,
+            'incorrect': self.worksheet.IncrctMk,
+            'day': self.worksheet.DayMk,
+            'week': self.worksheet.WeekMk,
+            'month': self.worksheet.MonthMk
+        }
+
+        for grade in range(self.worksheet.GradeRange[0], self.worksheet.GradeRange[-1] + 1):
+            index = grade - 1
+
+            # 出題数（NotMk）
+            count = self.worksheet.get_problem_count_for_grade_and_result(grade, mark_map['outnum'])
+            self.outnum_value[index].set(count)
+            total_counts['outnum'] += count
+
+            # 問題数（全体）
+            count = self.worksheet.get_problem_count_for_grade(grade)
+            self.tolnum_value[index].set(count)
+            total_counts['tolnum'] += count
+
+            # その他のマーク種別
+            for key in ['correct', 'incorrect', 'day', 'week', 'month']:
+                count = self.worksheet.get_problem_count_for_grade_and_result(grade, mark_map[key])
+                getattr(self, f'{key}_value')[index].set(count)
+                total_counts[key] += count
+
+        # 合計値を末尾にセット（index = 学年数）
+        last_index = self.worksheet.GradeRange[-1]
+        self.outnum_value[last_index].set(total_counts['outnum'])
+        self.tolnum_value[last_index].set(total_counts['tolnum'])
+
+        for key in ['correct', 'incorrect', 'day', 'week', 'month']:
+            getattr(self, f'{key}_value')[last_index].set(total_counts[key])
 
     def run(self):
         # 状態を更新
