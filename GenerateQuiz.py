@@ -20,7 +20,7 @@ class GenerateQuiz:
         self.list_n = []  # 未出題のインデックス
         self.list_o = []  # 正解している問題のインデックス
 
-    def create(self, worksheet, num, grade, student_name):
+    def create(self, path, worksheet, num, grade, student_name):
         # 作成日を取得する
         create_date = pd.to_datetime(datetime.datetime.today())
 
@@ -37,7 +37,7 @@ class GenerateQuiz:
 
         # 問題集を作成する
         self._create_train_mode(worksheet, num, grade)
-        self.output_quiz.create('./サンプル.pdf', student_name, create_date, num, self.quiz[worksheet.Problem])
+        self.output_quiz.create(path, student_name, create_date, num, self.quiz[worksheet.Problem])
 
     def _create_train_mode(self, worksheet, num, grade):
         # テスト問題を選定する

@@ -1,5 +1,6 @@
 # KanjiQuizMaker.py
 import os
+import subprocess
 import customtkinter as ctk
 import tkinter.messagebox as msgbox
 import tkinter.filedialog as filedialog
@@ -22,6 +23,7 @@ class KanjiQuizMaker:
         self.setting_file = SettingFile() # 設定ファイル
         self.worksheet = Worksheet(True)  # 問題集
         self.generate_quiz = GenerateQuiz()
+        self.kanji_quiz_path = ''
 
         self.setup_root()
         self.setup_widgets()
@@ -407,14 +409,18 @@ class KanjiQuizMaker:
             i = i + 1
 
         self.generate_quiz.create(
-              self.worksheet
+              self.kanji_quiz_path
+            , self.worksheet
             , self.get_number_of_problem()
             , grade_list
             , self.get_student_name()
         )
 
+        self.change_status()
+
     def event_print(self):
-        pass
+        #if os.path.exists(self.kanji_quiz_path):
+        subprocess.Popen(f'start "" "{self.kanji_quiz_path}"', shell=True)
 
     def change_status(self):
         # 「登録」ボタンを有効化
@@ -474,6 +480,12 @@ class KanjiQuizMaker:
                 getattr(self, 'generate_button').configure(state=ctk.NORMAL)
             else:
                 getattr(self, 'generate_button').configure(state=ctk.DISABLED)
+
+        self.kanji_quiz_path = './' + self.get_student_name() + '.pdf'
+        if os.path.exists(self.kanji_quiz_path):
+            getattr(self, 'print_button').configure(state=ctk.NORMAL)
+        else:
+            getattr(self, 'print_button').configure(state=ctk.DISABLED)
 
     def update_report(self):
         # マーク種別と対応する取得関数のマッピング
