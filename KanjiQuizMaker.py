@@ -6,6 +6,7 @@ import tkinter.filedialog as filedialog
 
 from SettingFile import SettingFile
 from Worksheet import Worksheet
+from GenerateQuiz import GenerateQuiz
 
 class KanjiQuizMaker:
     ERROR_EMPTY_NAME = u'名前を入力してください'
@@ -20,6 +21,7 @@ class KanjiQuizMaker:
 
         self.setting_file = SettingFile() # 設定ファイル
         self.worksheet = Worksheet(True)  # 問題集
+        self.generate_quiz = GenerateQuiz()
 
         self.setup_root()
         self.setup_widgets()
@@ -57,7 +59,7 @@ class KanjiQuizMaker:
         frame = self._create_frame(frame, row, column, None)
 
         self._create_section_label(frame, 0, 0, u'生徒登録')
-        self._create_entry(frame, 1, 0, 180, u'生徒名を入力', 'student_name_entry', None, 'normal')
+        self._create_entry(frame, 1, 0, 200, u'生徒名を入力', 'student_name_entry', None, 'normal')
         self._create_button(frame, 1, 1, u'登録', self.event_register_student, 'register_student_button')
 
     def widget_select_student(self, frame, row, column):
@@ -79,7 +81,7 @@ class KanjiQuizMaker:
             , values=values
             , variable=self.select_student_combobox_value
             , command=self.event_select_student
-            , width=180
+            , width=200
             , height=36
         )
         self.select_student_combobox.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
@@ -92,7 +94,7 @@ class KanjiQuizMaker:
               frame
             , 1
             , 0
-            , 180
+            , 200
             , None
             , 'worksheet_entry'
             , self.path_of_worksheet
@@ -226,12 +228,12 @@ class KanjiQuizMaker:
         # 出題数
         self._create_output_section(frame, 1, 1)
 
-        self._create_grade_value_section(frame, 1, 2, '正解', 'correct')
-        self._create_grade_value_section(frame, 1, 3, '不正解', 'incorrect')
-        self._create_grade_value_section(frame, 1, 4, '一日後', 'day')
-        self._create_grade_value_section(frame, 1, 5, '一週間後', 'week')
-        self._create_grade_value_section(frame, 1, 6, '一ヶ月後', 'month')
-#
+        self._create_schedule(frame, 1, 2, '正解', 'correct')
+        self._create_schedule(frame, 1, 3, '不正解', 'incorrect')
+        self._create_schedule(frame, 1, 4, '一日後', 'day')
+        self._create_schedule(frame, 1, 5, '一週間後', 'week')
+        self._create_schedule(frame, 1, 6, '一ヶ月後', 'month')
+
     def _create_grade_label_section(self, frame, row, column):
         frame = self._create_frame(frame, row, column, None)
 
@@ -250,18 +252,13 @@ class KanjiQuizMaker:
         self._create_text_label(frame, 0, 0, '出題状況', 3)
         self._create_grade_entries(frame, start_row=1, column_offset=0, value_prefixes=['outnum', 'tolnum'], show_slash=True)
 
-    def _create_grade_value_section(self, frame, row, column, title, value_attr_prefix):
+    def _create_schedule(self, frame, row, column, title, value_attr_prefix):
         frame = self._create_frame(frame, row, column, None)
         label = ctk.CTkLabel(frame, text=title, font=ctk.CTkFont(size=14))
         label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
         self._create_grade_entries(frame, start_row=1, column_offset=0, value_prefixes=[value_attr_prefix])
 
     def _create_grade_entries(self, frame, start_row, column_offset, value_prefixes, show_slash=False):
-        """
-        学年ごとの StringVar と CTkEntry を生成する共通関数。
-        value_prefixes: ['outnum', 'tolnum'] や ['correct'] のようなリスト
-        show_slash: True の場合、1列目と2列目の間に '/' を表示
-        """
         for prefix in value_prefixes:
             setattr(self, f"{prefix}_value", {})
             setattr(self, f"{prefix}_value_entry", {})
@@ -400,7 +397,21 @@ class KanjiQuizMaker:
         )
 
     def event_generate(self):
-        pass
+        grade_list = []
+        i = 1
+        for key in self.setting_file.GRADES:
+            checked = self.get_grade(key)
+            if checked:
+                grade_list.append(i)
+
+            i = i + 1
+
+        self.generate_quiz.create(
+              self.worksheet
+            , self.get_number_of_problem()
+            , grade_list
+            , self.get_student_name()
+        )
 
     def event_print(self):
         pass
@@ -458,6 +469,11 @@ class KanjiQuizMaker:
             if errnum == 0:
                 # レポートの更新
                 self.update_report()
+
+                # 「プリント作成」のエントリーを有効化
+                getattr(self, 'generate_button').configure(state=ctk.NORMAL)
+            else:
+                getattr(self, 'generate_button').configure(state=ctk.DISABLED)
 
     def update_report(self):
         # マーク種別と対応する取得関数のマッピング

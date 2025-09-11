@@ -1,6 +1,7 @@
 # Worksheet.py
 import os
 import pandas as pd
+import numpy as np
 
 class Worksheet:
     def __init__(self, debug=False):
@@ -30,7 +31,7 @@ class Worksheet:
         self.History = self.FileColumns[7]
 
         # 漢字テストの結果
-        self.NotMk = '-'
+        self.NotMk = np.nan
         self.CrctMk = 'o'
         self.IncrctMk = 'x'
         self.DayMk = 'd'
@@ -116,3 +117,18 @@ class Worksheet:
         if self.Debug:
             print('\033[31m' + 'Error: ' + msg + '\033[0m')
         return msg
+
+    # 問題集を取得する
+    def get_list(self):
+        return self.worksheet
+
+    # 条件に該当する問題集のインデックスを返す
+    def get_quiz(self, result, grade):
+        # Grade条件でフィルタ
+        grade_filtered = self.worksheet[self.worksheet[self.Grade].isin(grade)]
+
+        # Result条件でフィルタ
+        if result is np.nan:
+            return grade_filtered[grade_filtered[self.Result].isna()]
+        else:
+            return grade_filtered[grade_filtered[self.Result] == result]
