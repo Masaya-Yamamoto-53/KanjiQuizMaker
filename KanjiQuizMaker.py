@@ -13,6 +13,8 @@ class KanjiQuizMaker:
     ERROR_EMPTY_NAME = u'名前を入力してください'
     ERROR_ALREADY_REGISTERED = u'既に登録済みです'
     WARNING_DELETE_STUDENT = u'本当に削除しますか'
+    INFO_QUIZ_CREATED = u'漢字プリントの作成が完了しました'
+    ERROR_FILE_NOT_FOUND = u'ファイルが見つかりません'
 
     def __init__(self):
         self.root = ctk.CTk()
@@ -415,12 +417,15 @@ class KanjiQuizMaker:
             , grade_list
             , self.get_student_name()
         )
+        msgbox.showinfo('Info', self.INFO_QUIZ_CREATED)
 
         self.change_status()
 
     def event_print(self):
-        #if os.path.exists(self.kanji_quiz_path):
-        subprocess.Popen(f'start "" "{self.kanji_quiz_path}"', shell=True)
+        if os.path.exists(self.kanji_quiz_path):
+            subprocess.Popen(f'start "" "{self.kanji_quiz_path}"', shell=True)
+        else:
+            msgbox.showerror('Error', self.ERROR_FILE_NOT_FOUND)
 
     def change_status(self):
         # 「登録」ボタンを有効化
