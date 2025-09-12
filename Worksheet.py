@@ -3,32 +3,24 @@ import os
 import pandas as pd
 import numpy as np
 
-class Worksheet:
+from ColumnNames import ColumnNames
+from LoggerMixin import LoggerMixin
+
+class Worksheet(LoggerMixin):
     def __init__(self, debug=False):
-        # デバッグ情報を表示する場合はTrue
-        self.Debug = debug
+        super().__init__(True)
 
         # 問題集の列
-        self.FileColumns = [
-              '学年'
-            , '問題文'
-            , '答え'
-            , '番号'
-            , '管理番号'
-            , '最終更新日'
-            , '結果'
-            , '履歴'
-        ]
-
-        self.Grade = self.FileColumns[0]
-        self.GradeRange = [1, 6]
-        self.Problem = self.FileColumns[1]
-        self.Answer = self.FileColumns[2]
-        self.Number = self.FileColumns[3]
-        self.AdminNumber = self.FileColumns[4]
-        self.LastUpdate = self.FileColumns[5]
-        self.Result = self.FileColumns[6]
-        self.History = self.FileColumns[7]
+        self.FileColumns = ColumnNames.FILE_COLUMNS
+        self.Grade = ColumnNames.GRADE              # 学年
+        self.GradeRange = ColumnNames.GRADE_RANGE   # 学年（有効範囲）
+        self.Problem = ColumnNames.PROBLEM          # 問題文
+        self.Answer = ColumnNames.ANSWER            # 答え
+        self.Number = ColumnNames.NUMBER            # 番号
+        self.AdminNumber = ColumnNames.ADMIN_NUMBER # 管理番号
+        self.LastUpdate = ColumnNames.LAST_UPDATE   # 最終更新日
+        self.Result = ColumnNames.RESULT            # 結果
+        self.History = ColumnNames.HISTORY          # 履歴
 
         # 漢字テストの結果
         self.NotMk = np.nan
@@ -109,17 +101,6 @@ class Worksheet:
         else:
             # 学年と結果の両方が指定された場合
             return int(((df[self.Grade] == grade) & (df[self.Result] == result)).sum())
-
-    # デバッグ情報を標準出力する
-    def print_info(self, msg):
-        if self.Debug:
-            print('Info: ' + msg)
-
-    # エラーメッセージを標準出力する
-    def print_error(self, msg):
-        if self.Debug:
-            print('\033[31m' + 'Error: ' + msg + '\033[0m')
-        return msg
 
     # 問題集を取得する
     def get_list(self):

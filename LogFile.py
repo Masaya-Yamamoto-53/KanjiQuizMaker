@@ -1,31 +1,43 @@
 # LogFile.py
 import os
 import pandas as pd
-from Worksheet import Worksheet
 
-class LogFile(Worksheet):
+from ColumnNames import ColumnNames
+from LoggerMixin import LoggerMixin
+
+class LogFile(LoggerMixin):
     def __init__(self):
         super().__init__(True)
-        self.log = pd.DataFrame()
 
-    def create_logfile(self, path, worksheet):
-        worksheet.to_csv(path, encoding='shift-jis')
+        self.Answer = ColumnNames.ANSWER # 答え
+        self.Result = ColumnNames.RESULT # 結果
+
+        self.logfile = pd.DataFrame()
+
+    def set_logfile(self, logfile):
+        self.logfile = logfile
+
+    def create_logfile(self, path):
+        self.logfile.to_csv(path, encoding='shift-jis')
 
     def load_logfile(self, path):
-        self.log = pd.read_csv(path, sep=',', index_col=0, encoding='shift-jis')
+        try:
+            self.logfile = pd.read_csv(path, sep=',', index_col=0, encoding='shift-jis')
+        except Exception as e:
+            self.print_error(f'ログファイルの読み込みに失敗しました: {e}')
 
     def record_logfile(self, path, result_list):
         err_msg = []
         # ファイルが存在する
         if os.path.exists(path):
-            self.log = pd.read_csv(path, sep=',', index_col=0, encoding='shift-jis')
+            self.logfile = pd.read_csv(path, sep=',', index_col=0, encoding='shift-jis')
             self.print_info('ログファイル(' + path + ')を読み込みました')
 
-            if len(self.log) == len(result_list):
+            if len(self.logfile) == len(result_list):
                 # 採点結果を反映する
-                self.log[self.Result] = result_list
+                self.logfile[self.Result] = result_list
                 # 更新した漢字プリントの出題記録を書き込む
-                self.log.to_csv(path, encoding='shift-jis')
+                self.logfile.to_csv(path, encoding='shift-jis')
                 self.print_info('ログファイル(' + path + ')を書き込みました')
             else:
                 err_msg.append(self.print_error('ログファイルと採点結果の数が不一致です'))
@@ -39,7 +51,7 @@ class LogFile(Worksheet):
     def delete_logfile(self, path):
         # ファイルが存在する
         if os.path.exists(path):
-            # 漢字プリントの出題気力を削除する
+            # 漢字プリントの出題記録を削除する
             os.remove(path)
             self.print_info('ログファイル(' + path + ')を削除しました')
 
@@ -48,7 +60,15 @@ class LogFile(Worksheet):
             self.print_error('存在しないログファイル(' + path + ')を削除しようとしました')
 
     def get_answer(self):
-        return self.log[self.Answer].tolist()
+        if self.Answer in self.logfile.columns:
+            return self.logfile[self.Answer].tolist()
+        else:
+            self.print_error('[Answer]列が存在しないため、空のリストを返しました')
+            return []
 
     def get_result(self):
-        return self.log[self.Result].tolist()
+        if self.Result in self.logfile.columns:
+            return self.logfile[self.Result].tolist()
+        else:
+            self.print_error('[Result]列が存在しないため、空のリストを返しました')
+            return []

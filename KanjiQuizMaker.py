@@ -539,7 +539,8 @@ class KanjiQuizMaker:
             , self.get_student_name()       # 生徒名
         )
         # ログファイルを作成
-        self.log_file.create_logfile(self.log_file_path, quiz)
+        self.log_file.set_logfile(quiz)
+        self.log_file.create_logfile(self.log_file_path)
 
         # 作成完了メッセージを表示
         msgbox.showinfo('Info', u'漢字プリントの作成が完了しました')
