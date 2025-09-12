@@ -58,6 +58,9 @@ class KanjiQuizMaker:
         # レポート
         self.widget_report(btm_frame, row=0, column=0)
 
+    ################################################################################
+    # 生徒登録
+    ################################################################################
     def widget_register_student(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
         self.create_section_label(frame, 0, 0, u'生徒登録')
@@ -80,6 +83,9 @@ class KanjiQuizMaker:
             , 'register_student_button'
         )
 
+    ################################################################################
+    # 生徒選択
+    ################################################################################
     def widget_select_student(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
         self.create_section_label(frame, 0, 0, u'生徒選択')
@@ -93,6 +99,9 @@ class KanjiQuizMaker:
             , 'delete_student_button'
         )
 
+    ################################################################################
+    # 問題集選択
+    ################################################################################
     def widget_select_worksheet(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
         self.create_section_label(frame, 0, 0, u'問題集選択')
@@ -115,20 +124,21 @@ class KanjiQuizMaker:
             , 'select_worksheet_button'
         )
 
+    ################################################################################
+    # 出題範囲選択 & 出題数
+    ################################################################################
     def widget_select_quiz(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
-        self.widget_select_grade(frame, row=0, column=0)
-        self.widget_number_of_problem(frame, row=0, column=1)
+        self.create_select_grade(frame, row=0, column=0)
+        self.create_number_of_problem(frame, row=0, column=1)
 
-    def widget_select_grade(self, frame, row, column):
+    def create_select_grade(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
         self.create_section_label(frame, 0, 0, u'出題範囲選択')
 
         lft_frame = self.create_frame(frame, 1, 0, None)
         rgt_frame = self.create_frame(frame, 1, 1, None)
-        self.widget_select_grade_check_button(lft_frame, rgt_frame)
 
-    def widget_select_grade_check_button(self, lft_frame, rgt_frame):
         row_num = len(self.setting_file.GRADES) // 2
         frame_list = ([lft_frame] * row_num + [rgt_frame] * row_num)
 
@@ -146,7 +156,7 @@ class KanjiQuizMaker:
             )
             self.grade_check_button[key].grid(row=i, column=0, sticky='nesw', pady=5)
 
-    def widget_number_of_problem(self, frame, row, column):
+    def create_number_of_problem(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
 
         self.create_section_label(frame, 0, 0, u'出題数')
@@ -163,78 +173,18 @@ class KanjiQuizMaker:
         getattr(self, 'number_of_problem_entry').bind('<FocusOut>', self.event_change_number_of_problem)
         #self.number_of_problem.trace_add('write', self.event_change_number_of_problem)
 
+    ################################################################################
+    # プリント作成 & 印刷
+    ################################################################################
     def widget_print_section(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
 
         self.create_button(frame, 0, 0, u'プリント作成', self.event_generate, 'generate_button')
         self.create_button(frame, 0, 1, u'印刷', self.event_print, 'print_button')
 
-
-    def create_frame(self, frame, row, column, columnspan):
-        frame = ctk.CTkFrame(frame, corner_radius=10)
-        frame.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky='nesw')
-        return frame
-
-    def create_section_label(self, frame, row, column, text):
-        label = ctk.CTkLabel(frame, text=text, font=ctk.CTkFont(family='Yu Gothic UI', size=18, weight='bold'))
-        label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
-
-    def create_text_label(self, frame, row, column, text, columnspan=None):
-        label = ctk.CTkLabel(frame, text=text, font=ctk.CTkFont(family='Yu Gothic UI', size=14))
-        label.grid(row=row, column=column, columnspan=columnspan, sticky='n', padx=5, pady=5)
-
-    def create_entry(
-              self
-            , frame
-            , row
-            , column
-            , width
-            , placeholder_text=None
-            , attr_name=None
-            , textvariable=None
-            , state='normal'):
-
-        entry = ctk.CTkEntry(
-              frame
-            , placeholder_text=placeholder_text
-            , textvariable=textvariable
-            , width=width
-            , height=36
-            , state=state
-        )
-        entry.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-        if attr_name:
-            setattr(self, attr_name, entry)
-
-    def create_button(self, frame, row, column, text, command, attr_name):
-        button = ctk.CTkButton(
-              frame
-            , text=text
-            , command=command
-            , width=80
-            , height=36
-            , state=ctk.DISABLED
-        )
-        button.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-        setattr(self, attr_name, button)
-
-    def create_combbox(self, frame, row, column):
-        if self.setting_file.is_empty():
-            values = [u'']
-        else:
-            values = self.setting_file.get_student_list()
-
-        self.select_student_combobox_value = ctk.StringVar(value=values[0])
-        self.select_student_combobox = ctk.CTkOptionMenu(
-              frame
-            , values=values
-            , variable=self.select_student_combobox_value
-            , command=self.event_select_student
-            , width=200
-            , height=36
-        )
-        self.select_student_combobox.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-
+    ################################################################################
+    # 採点
+    ################################################################################
     def widget_score(self, frame, row, column):
         self.create_section_label(frame, 0, 0, u'採点')
 
@@ -248,33 +198,25 @@ class KanjiQuizMaker:
         keys_top = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩']
         keys_btm = ['⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
 
-        self.widget_scoring_widgets(top_frame, keys_top)
-        self.widget_scoring_widgets(btm_frame, keys_btm)
+        self.create_scoring_widgets(top_frame, keys_top)
+        self.create_scoring_widgets(btm_frame, keys_btm)
 
         menu_frame.grid_columnconfigure((0, 6), weight=1)
 
-        self.button_all_correct = ctk.CTkButton(
-              menu_frame, text = '全て○', font = ('Yu Gothic', 14), width = 80
-            , command=self.on_all_correct_clicked
+        self.create_button(
+              menu_frame, 0, 2, '全て○'
+            , self.on_all_correct_clicked, 'button_all_correct'
         )
-        self.button_all_correct.grid(row = 0, column = 2, padx = 10, pady = 10)
-        self.button_all_correct.configure(state=ctk.DISABLED)
-
-        self.button_all_incorrect = ctk.CTkButton(
-              menu_frame, text = '全て×', font = ('Yu Gothic', 14), width = 80
-            , command=self.on_all_incorrect_clicked
+        self.create_button(
+              menu_frame, 0, 3, '全て×'
+            , self.on_all_incorrect_clicked, 'button_all_incorrect'
         )
-        self.button_all_incorrect.grid(row = 0, column = 3, padx = 10, pady = 10)
-        self.button_all_incorrect.configure(state=ctk.DISABLED)
-
-        self.button_done = ctk.CTkButton(
-              menu_frame, text = '採点完了', font = ('Yu Gothic', 14), width = 80
-            , command=self.on_scoring_done
+        self.create_button(
+              menu_frame, 0, 4, '採点完了'
+            , self.on_scoring_done, 'button_done'
         )
-        self.button_done.grid(row = 0, column = 4, padx = 10, pady = 10)
-        self.button_done.configure(state=ctk.DISABLED)
 
-    def widget_scoring_widgets(self, parent_frame, keys):
+    def create_scoring_widgets(self, parent_frame, keys):
         for i, key in enumerate(keys):
             col = 9 - i
 
@@ -304,6 +246,9 @@ class KanjiQuizMaker:
             button.grid(row = 2, column = col, padx = 2, pady = (0, 5))
             self.scoring_answer_buttons[key] = button
 
+    ################################################################################
+    # レポート
+    ################################################################################
     def widget_report(self, frame, row, column):
         self.create_section_label(frame, 0, 0, u'レポート')
         # 学年
@@ -369,6 +314,71 @@ class KanjiQuizMaker:
                     , font=ctk.CTkFont(size=14)
                 )
                 slash_label.grid(row=start_row + i, column=column_offset + 1, sticky='w', padx=5, pady=1)
+
+    def create_frame(self, frame, row, column, columnspan):
+        frame = ctk.CTkFrame(frame, corner_radius=10)
+        frame.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky='nesw')
+        return frame
+
+    def create_section_label(self, frame, row, column, text):
+        label = ctk.CTkLabel(frame, text=text, font=ctk.CTkFont(family='Yu Gothic UI', size=18, weight='bold'))
+        label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
+
+    def create_text_label(self, frame, row, column, text, columnspan=None):
+        label = ctk.CTkLabel(frame, text=text, font=ctk.CTkFont(family='Yu Gothic UI', size=14))
+        label.grid(row=row, column=column, columnspan=columnspan, sticky='n', padx=5, pady=5)
+
+    def create_entry(
+              self
+            , frame
+            , row
+            , column
+            , width
+            , placeholder_text=None
+            , attr_name=None
+            , textvariable=None
+            , state='normal'):
+
+        entry = ctk.CTkEntry(
+              frame
+            , placeholder_text=placeholder_text
+            , textvariable=textvariable
+            , width=width
+            , height=36
+            , state=state
+        )
+        entry.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
+        if attr_name:
+            setattr(self, attr_name, entry)
+
+    def create_button(self, frame, row, column, text, command, attr_name):
+        button = ctk.CTkButton(
+              frame
+            , text=text
+            , command=command
+            , width=80
+            , height=36
+            , state=ctk.DISABLED
+        )
+        button.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
+        setattr(self, attr_name, button)
+
+    def create_combbox(self, frame, row, column):
+        if self.setting_file.is_empty():
+            values = [u'']
+        else:
+            values = self.setting_file.get_student_list()
+
+        self.select_student_combobox_value = ctk.StringVar(value=values[0])
+        self.select_student_combobox = ctk.CTkOptionMenu(
+              frame
+            , values=values
+            , variable=self.select_student_combobox_value
+            , command=self.event_select_student
+            , width=200
+            , height=36
+        )
+        self.select_student_combobox.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
 
     # 生徒名を取得
     def get_student_name(self):
