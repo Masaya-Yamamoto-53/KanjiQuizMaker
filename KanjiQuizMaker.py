@@ -1,11 +1,11 @@
 # KanjiQuizMaker.py
 import os
-import subprocess
 import customtkinter as ctk
 import tkinter.messagebox as msgbox
 import tkinter.filedialog as filedialog
 
 from SettingFile import SettingFile
+from LogFile import LogFile
 from Worksheet import Worksheet
 from GenerateQuiz import GenerateQuiz
 
@@ -15,17 +15,22 @@ class KanjiQuizMaker:
     WARNING_DELETE_STUDENT = u'本当に削除しますか'
     INFO_QUIZ_CREATED = u'漢字プリントの作成が完了しました'
     ERROR_FILE_NOT_FOUND = u'ファイルが見つかりません'
+    WARNING_INCOMPLETE_SCORING = u'採点が終わっていません。このまま続けますか'
 
     def __init__(self):
         self.root = ctk.CTk()
         self.path_of_worksheet = ctk.StringVar() # 問題集のパス
         self.number_of_problem = ctk.StringVar() # 出題数
         self.setting_file = SettingFile() # 設定ファイル
+        self.log_file = LogFile()
         self.worksheet = Worksheet(True)  # 問題集
         self.generate_quiz = GenerateQuiz()
         self.kanji_quiz_path = ''
         self.setup_root()
         self.setup_widgets()
+
+        self.keys = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
+                     '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
 
     def setup_root(self):
         self.root.title('漢字プリントメーカー')
@@ -239,9 +244,71 @@ class KanjiQuizMaker:
     def widget_score(self, frame, row, column):
         self._create_section_label(frame, 0, 0, u'採点')
 
-        top_frame = self._create_frame(frame, 0, 0, None)
-        btm_frame = self._create_frame(frame, 1, 0, None)
-        menu_frame = self._create_frame(frame, 2, 0, None)
+        top_frame = self._create_frame(frame, 1, 0, None)
+        btm_frame = self._create_frame(frame, 2, 0, None)
+        menu_frame = self._create_frame(frame, 3, 0, None)
+
+        self.scoring_answer_texts = {}
+        self.scoring_answer_buttons = {}
+
+        keys_top = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩']
+        keys_btm = ['⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
+
+        self.create_scoring_widgets(top_frame, keys_top)
+        self.create_scoring_widgets(btm_frame, keys_btm)
+
+        menu_frame.grid_columnconfigure((0, 6), weight=1)
+
+        self.button_all_correct = ctk.CTkButton(
+              menu_frame, text = '全て○', font = ('Yu Gothic', 14), width = 80
+            , command=self.on_all_correct_clicked
+        )
+        self.button_all_correct.grid(row = 0, column = 2, padx = 10, pady = 10)
+        self.button_all_correct.configure(state=ctk.DISABLED)
+
+        self.button_all_incorrect = ctk.CTkButton(
+              menu_frame, text = '全て×', font = ('Yu Gothic', 14), width = 80
+            , command=self.on_all_incorrect_clicked
+        )
+        self.button_all_incorrect.grid(row = 0, column = 3, padx = 10, pady = 10)
+        self.button_all_incorrect.configure(state=ctk.DISABLED)
+
+        self.button_done = ctk.CTkButton(
+              menu_frame, text = '採点完了', font = ('Yu Gothic', 14), width = 80
+            , command=self.on_scoring_done
+        )
+        self.button_done.grid(row = 0, column = 4, padx = 10, pady = 10)
+        self.button_done.configure(state=ctk.DISABLED)
+
+    def create_scoring_widgets(self, parent_frame, keys):
+        for i, key in enumerate(keys):
+            col = 9 - i
+
+            # ラベル
+            label = ctk.CTkLabel(parent_frame, text = key, width = 30, font = ('Yu Gothic', 18))
+            label.grid(row = 0, column = col, padx = 2, pady = 2)
+
+            # 縦書き風ラベル群
+            label_frame = ctk.CTkFrame(parent_frame, width=40)
+            label_frame.grid(row=1, column=col, padx=2, pady=(0, 5))
+            self.scoring_answer_texts[key] = []
+
+            for row in range(5):  # 最大6文字まで表示
+                char_label = ctk.CTkLabel(label_frame, text='', font=('Yu Gothic', 20), width=40)
+                char_label.grid(row=row, column=0)
+                self.scoring_answer_texts[key].append(char_label)
+
+            # ボタン
+            button = ctk.CTkButton(
+                  parent_frame
+                , text = '―'
+                , width = 40
+                , font = ('Yu Gothic', 14)
+                , command = lambda k=key: self.on_scoring_button_click(k)
+                , state = ctk.DISABLED
+            )
+            button.grid(row = 2, column = col, padx = 2, pady = (0, 5))
+            self.scoring_answer_buttons[key] = button
 
     def widget_report(self, frame, row, column):
         self._create_section_label(frame, 0, 0, u'レポート')
@@ -441,7 +508,16 @@ class KanjiQuizMaker:
             num
         )
 
+    # イベント発生条件：「プリント作成」ボタンを押したとき
+    # 処理概要：漢字プリントを作成する
     def event_generate(self):
+        # ログファイルが存在するとき
+        if os.path.exists(self.kanji_quiz_path):
+            msg = msgbox.askquestion('Warning', self.WARNING_INCOMPLETE_SCORING, default='no')
+            if msg == 'no':
+                # 漢字プリントの作成を中止する
+                return
+
         grade_list = []
         i = 1  # 学年のインデックス（1始まり）
         for key in self.setting_file.GRADES:
@@ -451,18 +527,26 @@ class KanjiQuizMaker:
 
             i = i + 1  # 次の学年へインデックスを進める
         # 漢字プリントを作成する
-        self.generate_quiz.create(
+        quiz = self.generate_quiz.create(
               self.kanji_quiz_path          # 保存先ファイルパス
             , self.worksheet                # ワークシート情報
             , self.get_number_of_problem()  # 出題数
             , grade_list                    # 対象学年のインデックスリスト
             , self.get_student_name()       # 生徒名
         )
+        # ログファイルを作成
+        self.log_file.create_logfile(self.log_file_path, quiz)
+
         # 作成完了メッセージを表示
         msgbox.showinfo('Info', self.INFO_QUIZ_CREATED)
+
+        self.update_scoring()
+
         # UIや状態の更新処理（ボタンの有効化など）
         self.change_status()
 
+    # イベント発生条件：「印刷」ボタンを押したとき
+    # 処理概要：ファイルを起動する
     def event_print(self):
         try:
             # 相対パスを絶対パスに変換
@@ -477,9 +561,83 @@ class KanjiQuizMaker:
             # ファイルの起動処理中に予期しない例外が発生した場合は、詳細を含めてエラーダイアログを表示
             msgbox.showerror('Error', f'ファイルの起動中にエラーが発生しました: {e}')
 
+    def on_scoring_button_click(self, key):
+        if self.scoring_answer_buttons[key].cget('text') != '○':
+            # 現在のボタン表示が「○」でない場合は「○」に変更（正解としてマーク）
+            self.scoring_answer_buttons[key].configure(text='○')
+        else:
+            # すでに「○」の場合は「×」に変更（不正解としてマーク）
+            self.scoring_answer_buttons[key].configure(text='×')
+
+    def on_all_correct_clicked(self):
+        # ログファイルから回答リストを取得
+        answer_list = self.log_file.get_answer()
+        # 各キーに対応するボタンを「○」に設定（回答が存在する範囲のみ）
+        for i, key in enumerate(self.keys):
+            if i < len(answer_list):
+                self.scoring_answer_buttons[key].configure(text='○')
+
+    def on_all_incorrect_clicked(self):
+        # ログファイルから回答リストを取得
+        answer_list = self.log_file.get_answer()
+        # 各キーに対応するボタンを「×」に設定（回答が存在する範囲のみ）
+        for i, key in enumerate(self.keys):
+            if i < len(answer_list):
+                self.scoring_answer_buttons[key].configure(text='×')
+
+    def on_scoring_done(self):
+        self.log_file.delete_logfile(self.log_file_path)
+        self.update_scoring()
+
+    def update_scoring(self):
+        # ログファイルが存在する場合、採点用のフィールドに答えと前回結果を入力する
+        safe_name = self.get_student_name().replace(' ', '_').replace('　', '_')
+        self.log_file_path = './.' + safe_name + '.log'
+        if os.path.exists(self.log_file_path):
+            self.log_file.load_logfile(self.log_file_path)
+            answer_list = self.log_file.get_answer()
+            result_list = self.log_file.get_result()
+
+            for i, key in enumerate(self.keys):
+                label_list = self.scoring_answer_texts.get(key)
+                if label_list and isinstance(label_list, list):
+                    # 該当する答えがある場合
+                    if i < len(answer_list):
+                        answer = str(answer_list[i])
+                        for j in range(len(label_list)):
+                            if j < len(answer):
+                                label_list[j].configure(text=answer[j])
+                            else:
+                                label_list[j].configure(text='')  # 空欄で初期化
+                        # 文字数オーバーなら最後に省略記号
+                        if len(answer) > len(label_list):
+                            label_list[-1].configure(text='…')
+                    else:
+                        # 答えがない場合はすべて空欄に初期化
+                        for label in label_list:
+                            label.configure(text='')
+
+            for i, key in enumerate(self.keys):
+                if i < len(answer_list):
+                    self.scoring_answer_buttons[key].configure(state=ctk.NORMAL)
+                else:
+                    self.scoring_answer_buttons[key].configure(state=ctk.DISABLED)
+
+            for i, key in enumerate(self.keys):
+                if i < len(result_list):
+                    if result_list[i] == 'm':
+                        self.scoring_answer_buttons[key].configure(text='M')
+                    elif result_list[i] == 'w':
+                        self.scoring_answer_buttons[key].configure(text='W')
+                    elif result_list[i] == 'd':
+                        self.scoring_answer_buttons[key].configure(text='D')
+                    else:
+                        self.scoring_answer_buttons[key].configure(text='―')
+
     def init_status(self):
         # 「登録」ボタンを有効化
         getattr(self, 'register_student_button').configure(state=ctk.NORMAL)
+        self.update_scoring()
 
     def change_status(self):
         # 「生徒選択」エントリーを更新する
@@ -538,11 +696,19 @@ class KanjiQuizMaker:
         safe_name = self.get_student_name().replace(' ', '_').replace('　', '_')
         # ファイルパスを生成（スペースがアンダーバーに置換された状態）
         self.kanji_quiz_path = './' + safe_name + '.pdf'
-
         if os.path.exists(self.kanji_quiz_path):
             getattr(self, 'print_button').configure(state=ctk.NORMAL)
         else:
             getattr(self, 'print_button').configure(state=ctk.DISABLED)
+
+        if os.path.exists(self.log_file_path):
+            self.button_all_correct.configure(state=ctk.NORMAL)
+            self.button_all_incorrect.configure(state=ctk.NORMAL)
+            self.button_done.configure(state=ctk.NORMAL)
+        else:
+            self.button_all_correct.configure(state=ctk.DISABLED)
+            self.button_all_incorrect.configure(state=ctk.DISABLED)
+            self.button_done.configure(state=ctk.DISABLED)
 
     def update_report(self):
         # マーク種別と対応する取得関数のマッピング

@@ -37,7 +37,10 @@ class GenerateQuiz:
 
         # 問題集を作成する
         self._create_train_mode(worksheet, num, grade)
+        # PDFを作成する
         self.output_quiz.create(path, student_name, create_date, num, self.quiz[worksheet.Problem])
+
+        return self.quiz
 
     def _create_train_mode(self, worksheet, num, grade):
         # テスト問題を選定する

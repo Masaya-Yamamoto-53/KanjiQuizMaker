@@ -5,24 +5,27 @@ from Worksheet import Worksheet
 
 class LogFile(Worksheet):
     def __init__(self):
-        super.__init__(self, True)
-        pass
+        super().__init__(True)
+        self.log = pd.DataFrame()
 
     def create_logfile(self, path, worksheet):
-        pass
+        worksheet.to_csv(path, encoding='shift-jis')
+
+    def load_logfile(self, path):
+        self.log = pd.read_csv(path, sep=',', index_col=0, encoding='shift-jis')
 
     def record_logfile(self, path, result_list):
         err_msg = []
         # ファイルが存在する
         if os.path.exists(path):
-            log = pd.read_csv(path, sep=',', index_col=0, encoding='shift-jis')
+            self.log = pd.read_csv(path, sep=',', index_col=0, encoding='shift-jis')
             self.print_info('ログファイル(' + path + ')を読み込みました')
 
-            if len(log) == len(result_list):
+            if len(self.log) == len(result_list):
                 # 採点結果を反映する
-                logs[self.Result] = result_list
+                self.log[self.Result] = result_list
                 # 更新した漢字プリントの出題記録を書き込む
-                logs.to_csv(path, encoding='shift-jis')
+                self.log.to_csv(path, encoding='shift-jis')
                 self.print_info('ログファイル(' + path + ')を書き込みました')
             else:
                 err_msg.append(self.print_error('ログファイルと採点結果の数が不一致です'))
@@ -43,3 +46,9 @@ class LogFile(Worksheet):
         # ファイルが存在しない
         else:
             self.print_error('存在しないログファイル(' + path + ')を削除しようとしました')
+
+    def get_answer(self):
+        return self.log[self.Answer].tolist()
+
+    def get_result(self):
+        return self.log[self.Result].tolist()
