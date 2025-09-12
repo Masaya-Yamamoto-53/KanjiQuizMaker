@@ -103,6 +103,9 @@ class Worksheet:
         if result is None:
             # 学年だけ指定された場合
             return int((df[self.Grade] == grade).sum())
+        elif pd.isna(result):
+            # 未マーク（欠損値）の場合：Result列がNaNの行をカウント
+            return int(((df[self.Grade] == grade) & (df[self.Result].isna())).sum())
         else:
             # 学年と結果の両方が指定された場合
             return int(((df[self.Grade] == grade) & (df[self.Result] == result)).sum())

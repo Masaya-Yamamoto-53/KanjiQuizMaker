@@ -10,36 +10,35 @@ from Worksheet import Worksheet
 from GenerateQuiz import GenerateQuiz
 
 class KanjiQuizMaker:
-    ERROR_EMPTY_NAME = u'名前を入力してください'
-    ERROR_ALREADY_REGISTERED = u'既に登録済みです'
-    WARNING_DELETE_STUDENT = u'本当に削除しますか'
-    INFO_QUIZ_CREATED = u'漢字プリントの作成が完了しました'
-    ERROR_FILE_NOT_FOUND = u'ファイルが見つかりません'
-    WARNING_INCOMPLETE_SCORING = u'採点が終わっていません。このまま続けますか'
-
     def __init__(self):
+        # アプリケーションのメインウィンドウを作成
         self.root = ctk.CTk()
+        # ウィンドウのタイトルを設定
+        self.root.title('漢字プリントメーカー')
+        # ウィンドウサイズの変更を禁止
+        self.root.resizable(False, False)
+
         self.path_of_worksheet = ctk.StringVar() # 問題集のパス
         self.number_of_problem = ctk.StringVar() # 出題数
-        self.setting_file = SettingFile() # 設定ファイル
-        self.log_file = LogFile()
-        self.worksheet = Worksheet(True)  # 問題集
-        self.generate_quiz = GenerateQuiz()
-        self.kanji_quiz_path = ''
-        self.setup_root()
-        self.setup_widgets()
+
+        self.kanji_file_path = ''  # 漢字プリントのパス
+        self.log_file_path = ''    # ログファイルのパス
 
         self.keys = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
                      '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
 
-    def setup_root(self):
-        self.root.title('漢字プリントメーカー')
-        self.root.resizable(False, False)
+        self.setting_file = SettingFile() # 設定ファイル
+        self.log_file = LogFile()         # ログファイル
+
+        self.worksheet = Worksheet(True)  # 問題集
+        self.generate_quiz = GenerateQuiz()
+
+        self.setup_widgets()
 
     def setup_widgets(self):
-        top_frame = self._create_frame(self.root, 0, 0, None)
+        top_frame = self.create_frame(self.root, 0, 0, None)
 
-        lft_frame = self._create_frame(top_frame, 0, 0, None)
+        lft_frame = self.create_frame(top_frame, 0, 0, None)
         # 生徒登録
         self.widget_register_student(lft_frame, row=0, column=0)
         # 生徒選択
@@ -49,20 +48,20 @@ class KanjiQuizMaker:
         # 出題範囲選択＆出題数
         self.widget_select_quiz(lft_frame, row=3, column=0)
         # プリント出力
-        self.create_print_section(lft_frame, row=4, column=0)
+        self.widget_print_section(lft_frame, row=4, column=0)
 
-        rgt_frame = self._create_frame(top_frame, 0, 1, None)
+        rgt_frame = self.create_frame(top_frame, 0, 1, None)
         # 採点
         self.widget_score(rgt_frame, row=0, column=0)
 
-        btm_frame = self._create_frame(self.root, 1, 0, 2)
+        btm_frame = self.create_frame(self.root, 1, 0, 2)
         # レポート
         self.widget_report(btm_frame, row=0, column=0)
 
     def widget_register_student(self, frame, row, column):
-        frame = self._create_frame(frame, row, column, None)
-        self._create_section_label(frame, 0, 0, u'生徒登録')
-        self._create_entry(
+        frame = self.create_frame(frame, row, column, None)
+        self.create_section_label(frame, 0, 0, u'生徒登録')
+        self.create_entry(
               frame
             , 1
             , 0
@@ -72,7 +71,7 @@ class KanjiQuizMaker:
             , None
             , 'normal'
         )
-        self._create_button(
+        self.create_button(
               frame
             , 1
             , 1
@@ -82,10 +81,10 @@ class KanjiQuizMaker:
         )
 
     def widget_select_student(self, frame, row, column):
-        frame = self._create_frame(frame, row, column, None)
-        self._create_section_label(frame, 0, 0, u'生徒選択')
-        self._create_combbox(frame, 1, 0)
-        self._create_button(
+        frame = self.create_frame(frame, row, column, None)
+        self.create_section_label(frame, 0, 0, u'生徒選択')
+        self.create_combbox(frame, 1, 0)
+        self.create_button(
               frame
             , 1
             , 1
@@ -94,28 +93,10 @@ class KanjiQuizMaker:
             , 'delete_student_button'
         )
 
-    def _create_combbox(self, frame, row, column):
-        if self.setting_file.is_empty():
-            values = [u'']
-        else:
-            values = self.setting_file.get_student_list()
-
-        self.select_student_combobox_value = ctk.StringVar(value=values[0])
-        self.select_student_combobox = ctk.CTkOptionMenu(
-              frame
-            , values=values
-            , variable=self.select_student_combobox_value
-            , command=self.event_select_student
-            , width=200
-            , height=36
-        )
-        self.select_student_combobox.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
-
     def widget_select_worksheet(self, frame, row, column):
-        frame = self._create_frame(frame, row, column, None)
-
-        self._create_section_label(frame, 0, 0, u'問題集選択')
-        self._create_entry(
+        frame = self.create_frame(frame, row, column, None)
+        self.create_section_label(frame, 0, 0, u'問題集選択')
+        self.create_entry(
               frame
             , 1
             , 0
@@ -125,7 +106,7 @@ class KanjiQuizMaker:
             , self.path_of_worksheet
             , 'readonly'
         )
-        self._create_button(
+        self.create_button(
               frame
             , 1
             , 1
@@ -135,22 +116,19 @@ class KanjiQuizMaker:
         )
 
     def widget_select_quiz(self, frame, row, column):
-        frame = self._create_frame(frame, row, column, None)
+        frame = self.create_frame(frame, row, column, None)
+        self.widget_select_grade(frame, row=0, column=0)
+        self.widget_number_of_problem(frame, row=0, column=1)
 
-        self._widget_select_grade(frame, row=0, column=0)
-        self._create_number_of_problem(frame, row=0, column=1)
+    def widget_select_grade(self, frame, row, column):
+        frame = self.create_frame(frame, row, column, None)
+        self.create_section_label(frame, 0, 0, u'出題範囲選択')
 
-    def _widget_select_grade(self, frame, row, column):
-        frame = self._create_frame(frame, row, column, None)
+        lft_frame = self.create_frame(frame, 1, 0, None)
+        rgt_frame = self.create_frame(frame, 1, 1, None)
+        self.widget_select_grade_check_button(lft_frame, rgt_frame)
 
-        self._create_section_label(frame, 0, 0, u'出題範囲選択')
-
-        lft_frame = self._create_frame(frame, 1, 0, None)
-        rgt_frame = self._create_frame(frame, 1, 1, None)
-
-        self._widget_select_grade_check_button(lft_frame, rgt_frame)
-
-    def _widget_select_grade_check_button(self, lft_frame, rgt_frame):
+    def widget_select_grade_check_button(self, lft_frame, rgt_frame):
         row_num = len(self.setting_file.GRADES) // 2
         frame_list = ([lft_frame] * row_num + [rgt_frame] * row_num)
 
@@ -168,11 +146,11 @@ class KanjiQuizMaker:
             )
             self.grade_check_button[key].grid(row=i, column=0, sticky='nesw', pady=5)
 
-    def _create_number_of_problem(self, frame, row, column):
-        frame = self._create_frame(frame, row, column, None)
+    def widget_number_of_problem(self, frame, row, column):
+        frame = self.create_frame(frame, row, column, None)
 
-        self._create_section_label(frame, 0, 0, u'出題数')
-        self._create_entry(
+        self.create_section_label(frame, 0, 0, u'出題数')
+        self.create_entry(
               frame
             , 1
             , 0
@@ -185,28 +163,27 @@ class KanjiQuizMaker:
         getattr(self, 'number_of_problem_entry').bind('<FocusOut>', self.event_change_number_of_problem)
         #self.number_of_problem.trace_add('write', self.event_change_number_of_problem)
 
-    def create_print_section(self, frame, row, column):
-        frame = self._create_frame(frame, row, column, None)
+    def widget_print_section(self, frame, row, column):
+        frame = self.create_frame(frame, row, column, None)
 
-        self._create_button(frame, 0, 0, u'プリント作成', self.event_generate, 'generate_button')
-        self._create_button(frame, 0, 1, u'印刷', self.event_print, 'print_button')
+        self.create_button(frame, 0, 0, u'プリント作成', self.event_generate, 'generate_button')
+        self.create_button(frame, 0, 1, u'印刷', self.event_print, 'print_button')
 
 
-    def _create_frame(self, frame, row, column, columnspan):
+    def create_frame(self, frame, row, column, columnspan):
         frame = ctk.CTkFrame(frame, corner_radius=10)
         frame.grid(row=row, column=column, columnspan=columnspan, padx=5, pady=5, sticky='nesw')
         return frame
 
-
-    def _create_section_label(self, frame, row, column, text):
+    def create_section_label(self, frame, row, column, text):
         label = ctk.CTkLabel(frame, text=text, font=ctk.CTkFont(family='Yu Gothic UI', size=18, weight='bold'))
         label.grid(row=row, column=column, sticky='nw', padx=5, pady=5)
 
-    def _create_text_label(self, frame, row, column, text, columnspan=None):
+    def create_text_label(self, frame, row, column, text, columnspan=None):
         label = ctk.CTkLabel(frame, text=text, font=ctk.CTkFont(family='Yu Gothic UI', size=14))
         label.grid(row=row, column=column, columnspan=columnspan, sticky='n', padx=5, pady=5)
 
-    def _create_entry(
+    def create_entry(
               self
             , frame
             , row
@@ -229,7 +206,7 @@ class KanjiQuizMaker:
         if attr_name:
             setattr(self, attr_name, entry)
 
-    def _create_button(self, frame, row, column, text, command, attr_name):
+    def create_button(self, frame, row, column, text, command, attr_name):
         button = ctk.CTkButton(
               frame
             , text=text
@@ -241,12 +218,29 @@ class KanjiQuizMaker:
         button.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
         setattr(self, attr_name, button)
 
-    def widget_score(self, frame, row, column):
-        self._create_section_label(frame, 0, 0, u'採点')
+    def create_combbox(self, frame, row, column):
+        if self.setting_file.is_empty():
+            values = [u'']
+        else:
+            values = self.setting_file.get_student_list()
 
-        top_frame = self._create_frame(frame, 1, 0, None)
-        btm_frame = self._create_frame(frame, 2, 0, None)
-        menu_frame = self._create_frame(frame, 3, 0, None)
+        self.select_student_combobox_value = ctk.StringVar(value=values[0])
+        self.select_student_combobox = ctk.CTkOptionMenu(
+              frame
+            , values=values
+            , variable=self.select_student_combobox_value
+            , command=self.event_select_student
+            , width=200
+            , height=36
+        )
+        self.select_student_combobox.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
+
+    def widget_score(self, frame, row, column):
+        self.create_section_label(frame, 0, 0, u'採点')
+
+        top_frame = self.create_frame(frame, 1, 0, None)
+        btm_frame = self.create_frame(frame, 2, 0, None)
+        menu_frame = self.create_frame(frame, 3, 0, None)
 
         self.scoring_answer_texts = {}
         self.scoring_answer_buttons = {}
@@ -254,8 +248,8 @@ class KanjiQuizMaker:
         keys_top = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩']
         keys_btm = ['⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
 
-        self.create_scoring_widgets(top_frame, keys_top)
-        self.create_scoring_widgets(btm_frame, keys_btm)
+        self.widget_scoring_widgets(top_frame, keys_top)
+        self.widget_scoring_widgets(btm_frame, keys_btm)
 
         menu_frame.grid_columnconfigure((0, 6), weight=1)
 
@@ -280,7 +274,7 @@ class KanjiQuizMaker:
         self.button_done.grid(row = 0, column = 4, padx = 10, pady = 10)
         self.button_done.configure(state=ctk.DISABLED)
 
-    def create_scoring_widgets(self, parent_frame, keys):
+    def widget_scoring_widgets(self, parent_frame, keys):
         for i, key in enumerate(keys):
             col = 9 - i
 
@@ -311,22 +305,22 @@ class KanjiQuizMaker:
             self.scoring_answer_buttons[key] = button
 
     def widget_report(self, frame, row, column):
-        self._create_section_label(frame, 0, 0, u'レポート')
+        self.create_section_label(frame, 0, 0, u'レポート')
         # 学年
-        self._create_grade_label_section(frame, 1, 0)
+        self.create_grade_label_section(frame, 1, 0)
         # 出題数
-        self._create_output_section(frame, 1, 1)
+        self.create_output_section(frame, 1, 1)
 
-        self._create_schedule(frame, 1, 2, '正解', 'correct')
-        self._create_schedule(frame, 1, 3, '不正解', 'incorrect')
-        self._create_schedule(frame, 1, 4, '一日後', 'day')
-        self._create_schedule(frame, 1, 5, '一週間後', 'week')
-        self._create_schedule(frame, 1, 6, '一ヶ月後', 'month')
+        self.create_schedule(frame, 1, 2, '正解', 'correct')
+        self.create_schedule(frame, 1, 3, '不正解', 'incorrect')
+        self.create_schedule(frame, 1, 4, '一日後', 'day')
+        self.create_schedule(frame, 1, 5, '一週間後', 'week')
+        self.create_schedule(frame, 1, 6, '一ヶ月後', 'month')
 
-    def _create_grade_label_section(self, frame, row, column):
-        frame = self._create_frame(frame, row, column, None)
+    def create_grade_label_section(self, frame, row, column):
+        frame = self.create_frame(frame, row, column, None)
 
-        self._create_text_label(frame, 0, 0, u'学年')
+        self.create_text_label(frame, 0, 0, u'学年')
 
         for i, grade_text in enumerate(self.setting_file.GRADES + [u'合計']):
             grade_label = ctk.CTkLabel(
@@ -336,18 +330,18 @@ class KanjiQuizMaker:
             )
             grade_label.grid(row=i + 1, column=0, sticky='n', padx=5, pady=1)
 
-    def _create_output_section(self, frame, row, column):
-        frame = self._create_frame(frame, row, column, None)
-        self._create_text_label(frame, 0, 0, '出題状況', 3)
-        self._create_grade_entries(frame, start_row=1, column_offset=0, value_prefixes=['outnum', 'tolnum'], show_slash=True)
+    def create_output_section(self, frame, row, column):
+        frame = self.create_frame(frame, row, column, None)
+        self.create_text_label(frame, 0, 0, '出題状況', 3)
+        self.create_grade_entries(frame, start_row=1, column_offset=0, value_prefixes=['outnum', 'tolnum'], show_slash=True)
 
-    def _create_schedule(self, frame, row, column, title, value_attr_prefix):
-        frame = self._create_frame(frame, row, column, None)
+    def create_schedule(self, frame, row, column, title, value_attr_prefix):
+        frame = self.create_frame(frame, row, column, None)
         label = ctk.CTkLabel(frame, text=title, font=ctk.CTkFont(size=14))
         label.grid(row=0, column=0, sticky='n', padx=5, pady=5)
-        self._create_grade_entries(frame, start_row=1, column_offset=0, value_prefixes=[value_attr_prefix])
+        self.create_grade_entries(frame, start_row=1, column_offset=0, value_prefixes=[value_attr_prefix])
 
-    def _create_grade_entries(self, frame, start_row, column_offset, value_prefixes, show_slash=False):
+    def create_grade_entries(self, frame, start_row, column_offset, value_prefixes, show_slash=False):
         for prefix in value_prefixes:
             setattr(self, f"{prefix}_value", {})
             setattr(self, f"{prefix}_value_entry", {})
@@ -421,12 +415,12 @@ class KanjiQuizMaker:
         # 「生徒登録」エントリーが空欄のとき、エラーを通知する
         student_name = getattr(self, 'student_name_entry').get()
         if not student_name:
-            msgbox.showerror('Error', self.ERROR_EMPTY_NAME)
+            msgbox.showerror('Error', u'名前を入力してください')
             return
 
         # 「生徒登録」エントリーに記入した名前がすでに登録済みのとき、エラーを通知する
         if self.setting_file.is_registered_student(student_name):
-            msgbox.showerror('Error', self.ERROR_ALREADY_REGISTERED)
+            msgbox.showerror('Error', u'既に登録済みです')
             return
 
         # 設定ファイルに生徒を登録する
@@ -451,7 +445,7 @@ class KanjiQuizMaker:
         student_name = self.get_student_name()
         # 生徒名が有効なとき
         if len(student_name) > 0:
-            msg = msgbox.askquestion('Warning', self.WARNING_DELETE_STUDENT, default='no')
+            msg = msgbox.askquestion('Warning', u'本当に削除しますか', default='no')
             if msg == 'yes':
                 self.setting_file.delete_student(student_name)
                 self.set_student_name('')
@@ -512,8 +506,8 @@ class KanjiQuizMaker:
     # 処理概要：漢字プリントを作成する
     def event_generate(self):
         # ログファイルが存在するとき
-        if os.path.exists(self.kanji_quiz_path):
-            msg = msgbox.askquestion('Warning', self.WARNING_INCOMPLETE_SCORING, default='no')
+        if os.path.exists(self.kanji_file_path):
+            msg = msgbox.askquestion('Warning', u'採点が終わっていません。このまま続けますか', default='no')
             if msg == 'no':
                 # 漢字プリントの作成を中止する
                 return
@@ -528,7 +522,7 @@ class KanjiQuizMaker:
             i = i + 1  # 次の学年へインデックスを進める
         # 漢字プリントを作成する
         quiz = self.generate_quiz.create(
-              self.kanji_quiz_path          # 保存先ファイルパス
+              self.kanji_file_path          # 保存先ファイルパス
             , self.worksheet                # ワークシート情報
             , self.get_number_of_problem()  # 出題数
             , grade_list                    # 対象学年のインデックスリスト
@@ -538,7 +532,7 @@ class KanjiQuizMaker:
         self.log_file.create_logfile(self.log_file_path, quiz)
 
         # 作成完了メッセージを表示
-        msgbox.showinfo('Info', self.INFO_QUIZ_CREATED)
+        msgbox.showinfo('Info', u'漢字プリントの作成が完了しました')
 
         self.update_scoring()
 
@@ -550,13 +544,13 @@ class KanjiQuizMaker:
     def event_print(self):
         try:
             # 相対パスを絶対パスに変換
-            full_path = os.path.abspath(self.kanji_quiz_path)
+            full_path = os.path.abspath(self.kanji_file_path)
             # ファイルの存在を確認して開く
             if os.path.exists(full_path):
                 os.startfile(full_path)
             else:
                 # ファイルが存在しない場合は、エラーダイアログを表示
-                msgbox.showerror('Error', self.ERROR_FILE_NOT_FOUND)
+                msgbox.showerror('Error', u'ファイルが見つかりません')
         except Exception as e:
             # ファイルの起動処理中に予期しない例外が発生した場合は、詳細を含めてエラーダイアログを表示
             msgbox.showerror('Error', f'ファイルの起動中にエラーが発生しました: {e}')
@@ -589,54 +583,20 @@ class KanjiQuizMaker:
         self.log_file.delete_logfile(self.log_file_path)
         self.update_scoring()
 
-    def update_scoring(self):
-        # ログファイルが存在する場合、採点用のフィールドに答えと前回結果を入力する
+    def create_path(self):
+        # 生徒名を取得し、スペースをアンダーバーに置換
         safe_name = self.get_student_name().replace(' ', '_').replace('　', '_')
+        # 漢字プリントのパスを作成
+        self.kanji_file_path = './' + safe_name + '.pdf'
+        # ログファイルのパスを作成
         self.log_file_path = './.' + safe_name + '.log'
-        if os.path.exists(self.log_file_path):
-            self.log_file.load_logfile(self.log_file_path)
-            answer_list = self.log_file.get_answer()
-            result_list = self.log_file.get_result()
-
-            for i, key in enumerate(self.keys):
-                label_list = self.scoring_answer_texts.get(key)
-                if label_list and isinstance(label_list, list):
-                    # 該当する答えがある場合
-                    if i < len(answer_list):
-                        answer = str(answer_list[i])
-                        for j in range(len(label_list)):
-                            if j < len(answer):
-                                label_list[j].configure(text=answer[j])
-                            else:
-                                label_list[j].configure(text='')  # 空欄で初期化
-                        # 文字数オーバーなら最後に省略記号
-                        if len(answer) > len(label_list):
-                            label_list[-1].configure(text='…')
-                    else:
-                        # 答えがない場合はすべて空欄に初期化
-                        for label in label_list:
-                            label.configure(text='')
-
-            for i, key in enumerate(self.keys):
-                if i < len(answer_list):
-                    self.scoring_answer_buttons[key].configure(state=ctk.NORMAL)
-                else:
-                    self.scoring_answer_buttons[key].configure(state=ctk.DISABLED)
-
-            for i, key in enumerate(self.keys):
-                if i < len(result_list):
-                    if result_list[i] == 'm':
-                        self.scoring_answer_buttons[key].configure(text='M')
-                    elif result_list[i] == 'w':
-                        self.scoring_answer_buttons[key].configure(text='W')
-                    elif result_list[i] == 'd':
-                        self.scoring_answer_buttons[key].configure(text='D')
-                    else:
-                        self.scoring_answer_buttons[key].configure(text='―')
 
     def init_status(self):
         # 「登録」ボタンを有効化
         getattr(self, 'register_student_button').configure(state=ctk.NORMAL)
+
+        self.create_path()
+
         self.update_scoring()
 
     def change_status(self):
@@ -692,11 +652,7 @@ class KanjiQuizMaker:
             else:
                 getattr(self, 'generate_button').configure(state=ctk.DISABLED)
 
-        # 生徒名を取得し、スペースをアンダーバーに置換
-        safe_name = self.get_student_name().replace(' ', '_').replace('　', '_')
-        # ファイルパスを生成（スペースがアンダーバーに置換された状態）
-        self.kanji_quiz_path = './' + safe_name + '.pdf'
-        if os.path.exists(self.kanji_quiz_path):
+        if os.path.exists(self.kanji_file_path):
             getattr(self, 'print_button').configure(state=ctk.NORMAL)
         else:
             getattr(self, 'print_button').configure(state=ctk.DISABLED)
@@ -710,17 +666,65 @@ class KanjiQuizMaker:
             self.button_all_incorrect.configure(state=ctk.DISABLED)
             self.button_done.configure(state=ctk.DISABLED)
 
+        self.create_path()
+
+    def update_scoring(self):
+        # ログファイルが存在する場合、採点用のフィールドに答えと前回結果を入力する
+        if os.path.exists(self.log_file_path):
+            self.log_file.load_logfile(self.log_file_path)
+            answer_list = self.log_file.get_answer()
+            result_list = self.log_file.get_result()
+
+            for i, key in enumerate(self.keys):
+                label_list = self.scoring_answer_texts.get(key)
+                if label_list and isinstance(label_list, list):
+                    # 該当する答えがある場合
+                    if i < len(answer_list):
+                        answer = str(answer_list[i])
+                        for j in range(len(label_list)):
+                            if j < len(answer):
+                                label_list[j].configure(text=answer[j])
+                            else:
+                                label_list[j].configure(text='')  # 空欄で初期化
+                        # 文字数オーバーなら最後に省略記号
+                        if len(answer) > len(label_list):
+                            label_list[-1].configure(text='…')
+                    else:
+                        # 答えがない場合はすべて空欄に初期化
+                        for label in label_list:
+                            label.configure(text='')
+
+            for i, key in enumerate(self.keys):
+                if i < len(answer_list):
+                    self.scoring_answer_buttons[key].configure(state=ctk.NORMAL)
+                else:
+                    self.scoring_answer_buttons[key].configure(state=ctk.DISABLED)
+
+            for i, key in enumerate(self.keys):
+                if i < len(result_list):
+                    if result_list[i] == 'm':
+                        self.scoring_answer_buttons[key].configure(text='M')
+                    elif result_list[i] == 'w':
+                        self.scoring_answer_buttons[key].configure(text='W')
+                    elif result_list[i] == 'd':
+                        self.scoring_answer_buttons[key].configure(text='D')
+                    else:
+                        self.scoring_answer_buttons[key].configure(text='―')
+
     def update_report(self):
+        # 出題数を求める
+        def calc_outnum(grade):
+            return self.worksheet.get_count_by(grade) - self.worksheet.get_count_by(grade, self.worksheet.NotMk)
+
         # マーク種別と対応する取得関数のマッピング
         mark_map = {
-            'outnum': lambda grade: self.worksheet.get_count_by(grade) -
-                                    self.worksheet.get_count_by(grade, self.worksheet.NotMk),
-            'tolnum': lambda grade: self.worksheet.get_count_by(grade),
-            'correct': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.CrctMk),
-            'incorrect': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.IncrctMk),
-            'day': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.DayMk),
-            'week': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.WeekMk),
-            'month': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.MonthMk)
+              'outnum': lambda grade: calc_outnum(grade)
+            , 'tolnum': lambda grade: self.worksheet.get_count_by(grade)
+            , 'correct': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.CrctMk)
+            , 'incorrect': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.IncrctMk)
+            , 'day': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.DayMk)
+            , 'week': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.WeekMk)
+            , 'month': lambda grade: self.worksheet.get_count_by(grade, self.worksheet.MonthMk)
         }
 
         # 合計値の初期化
