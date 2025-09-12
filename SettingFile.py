@@ -74,16 +74,20 @@ class SettingFile:
         # 設定ファイルを保存する
         self.save_setting_file()
 
+    # 生徒が登録済みかどうかを判定
     def is_registered_student(self, student_name):
         return student_name in self.setting_file[self.STUDENT_NAME].values
 
+    # 登録されている生徒名の一覧を取得
     def get_student_list(self):
         return self.setting_file[self.STUDENT_NAME].values.tolist()
 
+    # 生徒に紐づくワークシートのパスを取得
     def get_worksheet_path(self, student_name):
         mask = self.setting_file[self.STUDENT_NAME] == student_name
         return self.setting_file.loc[mask, self.WORKSHEET_PATH].iloc[0]
 
+    # 生徒に紐づくワークシートのパスを更新
     def set_worksheet_path(self, student_name, path):
         mask = self.setting_file[self.STUDENT_NAME] == student_name
         self.setting_file[self.WORKSHEET_PATH] = self.setting_file[self.WORKSHEET_PATH].astype(str)
@@ -91,25 +95,30 @@ class SettingFile:
 
         self.save_setting_file()
 
+    # 生徒が選択している学年のフラグ一覧を取得
     def get_grade_list(self, student_name):
         return self.setting_file.loc[
             self.setting_file[self.STUDENT_NAME] == student_name,
             self.GRADES
         ].values.flatten().tolist()
 
+    # 生徒の指定学年の出題フラグを更新
     def set_grade(self, student_name, key, checked):
         mask = self.setting_file[self.STUDENT_NAME] == student_name
         self.setting_file.loc[mask, key] = checked
         self.save_setting_file()
 
+    # 生徒ごとの出題数を取得
     def get_number_of_problem(self, student_name):
         mask = self.setting_file[self.STUDENT_NAME] == student_name
         return self.setting_file.loc[mask, self.NUMBER].iloc[0]
 
+    # 生徒ごとの出題数を更新
     def set_number_of_problem(self, student_name, value):
         mask = self.setting_file[self.STUDENT_NAME] == student_name
         self.setting_file.loc[mask, self.NUMBER] = value
         self.save_setting_file()
 
+    # 設定ファイルに生徒が1人も登録されていないかを判定
     def is_empty(self):
         return len(self.setting_file[self.STUDENT_NAME]) == 0

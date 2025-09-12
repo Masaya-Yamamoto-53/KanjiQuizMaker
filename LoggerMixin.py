@@ -9,6 +9,7 @@ class LoggerMixin:
     def print_info(self, msg):
         if self.Debug:
             print('Info: ' + msg)
+        return msg
 
     # エラーメッセージを標準出力する
     def print_error(self, msg):

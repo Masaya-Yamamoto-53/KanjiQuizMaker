@@ -22,7 +22,7 @@ class LogFile(LoggerMixin):
 
     def load_logfile(self, path):
         try:
-            self.logfile = pd.read_csv(path, sep=',', index_col=0, encoding='shift-jis')
+            self.logfile = self.read_csv_file(path)
         except Exception as e:
             self.print_error(f'ログファイルの読み込みに失敗しました: {e}')
 
@@ -30,7 +30,7 @@ class LogFile(LoggerMixin):
         err_msg = []
         # ファイルが存在する
         if os.path.exists(path):
-            self.logfile = pd.read_csv(path, sep=',', index_col=0, encoding='shift-jis')
+            self.logfile = self.read_csv_file(path)
             self.print_info('ログファイル(' + path + ')を読み込みました')
 
             if len(self.logfile) == len(result_list):
@@ -44,7 +44,7 @@ class LogFile(LoggerMixin):
 
         # ファイルが存在しない
         else:
-            err_msg.append(self.print_info('ログファイル(' + path + ')あ読み込みませんでした'))
+            err_msg.append(self.print_info('ログファイル(' + path + ')は読み込みませんでした'))
 
         return len(err_msg), err_msg
 
@@ -58,6 +58,13 @@ class LogFile(LoggerMixin):
         # ファイルが存在しない
         else:
             self.print_error('存在しないログファイル(' + path + ')を削除しようとしました')
+
+    def read_csv_file(self, path):
+        try:
+            return pd.read_csv(path, sep=',', index_col=0, encoding='shift-jis')
+        except Exception as e:
+            self.print_error(f'CSV読み込み失敗: {e}')
+            return pd.DataFrame()  # 空のデータを返す
 
     def get_answer(self):
         if self.Answer in self.logfile.columns:
