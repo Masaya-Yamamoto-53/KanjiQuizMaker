@@ -20,13 +20,10 @@ class KanjiQuizMaker:
         self.root = ctk.CTk()
         self.path_of_worksheet = ctk.StringVar() # 問題集のパス
         self.number_of_problem = ctk.StringVar() # 出題数
-        self.number_of_problem.trace_add('write', self.event_change_number_of_problem)
-
         self.setting_file = SettingFile() # 設定ファイル
         self.worksheet = Worksheet(True)  # 問題集
         self.generate_quiz = GenerateQuiz()
         self.kanji_quiz_path = ''
-
         self.setup_root()
         self.setup_widgets()
 
@@ -36,8 +33,8 @@ class KanjiQuizMaker:
 
     def setup_widgets(self):
         top_frame = self._create_frame(self.root, 0, 0, None)
-        lft_frame = self._create_frame(top_frame, 0, 0, None)
 
+        lft_frame = self._create_frame(top_frame, 0, 0, None)
         # 生徒登録
         self.widget_register_student(lft_frame, row=0, column=0)
         # 生徒選択
@@ -50,28 +47,47 @@ class KanjiQuizMaker:
         self.create_print_section(lft_frame, row=4, column=0)
 
         rgt_frame = self._create_frame(top_frame, 0, 1, None)
-
         # 採点
         self.widget_score(rgt_frame, row=0, column=0)
 
         btm_frame = self._create_frame(self.root, 1, 0, 2)
-
         # レポート
         self.widget_report(btm_frame, row=0, column=0)
 
     def widget_register_student(self, frame, row, column):
         frame = self._create_frame(frame, row, column, None)
-
         self._create_section_label(frame, 0, 0, u'生徒登録')
-        self._create_entry(frame, 1, 0, 200, u'生徒名を入力', 'student_name_entry', None, 'normal')
-        self._create_button(frame, 1, 1, u'登録', self.event_register_student, 'register_student_button')
+        self._create_entry(
+              frame
+            , 1
+            , 0
+            , 200
+            , u'生徒名を入力'
+            , 'student_name_entry'
+            , None
+            , 'normal'
+        )
+        self._create_button(
+              frame
+            , 1
+            , 1
+            , u'登録'
+            , self.event_register_student
+            , 'register_student_button'
+        )
 
     def widget_select_student(self, frame, row, column):
         frame = self._create_frame(frame, row, column, None)
-
         self._create_section_label(frame, 0, 0, u'生徒選択')
         self._create_combbox(frame, 1, 0)
-        self._create_button(frame, 1, 1, u'削除', self.event_delete_student, 'delete_student_button')
+        self._create_button(
+              frame
+            , 1
+            , 1
+            , u'削除'
+            , self.event_delete_student
+            , 'delete_student_button'
+        )
 
     def _create_combbox(self, frame, row, column):
         if self.setting_file.is_empty():
@@ -161,6 +177,8 @@ class KanjiQuizMaker:
             , self.number_of_problem
             , ctk.DISABLED
         )
+        getattr(self, 'number_of_problem_entry').bind('<FocusOut>', self.event_change_number_of_problem)
+        #self.number_of_problem.trace_add('write', self.event_change_number_of_problem)
 
     def create_print_section(self, frame, row, column):
         frame = self._create_frame(frame, row, column, None)
@@ -274,41 +292,48 @@ class KanjiQuizMaker:
 
                 value_dict[i] = ctk.StringVar(value="")
                 entry = ctk.CTkEntry(
-                    frame,
-                    width=50,
-                    textvariable=value_dict[i],
-                    justify='right',
-                    state='readonly'
+                      frame
+                    , width=50
+                    , textvariable=value_dict[i]
+                    , justify='right'
+                    , state='readonly'
                 )
                 entry.grid(row=start_row + i, column=column_offset + j * 2, sticky='w', padx=5, pady=1)
                 entry_dict[i] = entry
 
             if show_slash and len(value_prefixes) == 2:
                 slash_label = ctk.CTkLabel(
-                    frame,
-                    text='/',
-                    font=ctk.CTkFont(size=14)
+                      frame
+                    , text='/'
+                    , font=ctk.CTkFont(size=14)
                 )
                 slash_label.grid(row=start_row + i, column=column_offset + 1, sticky='w', padx=5, pady=1)
 
+    # 生徒名を取得
     def get_student_name(self):
         return self.select_student_combobox_value.get()
 
+    # 生徒名を設定
     def set_student_name(self, student_name):
         self.select_student_combobox_value.set(student_name)
 
+    # 問題集のファイルパスを取得
     def get_worksheet_path(self):
         return self.path_of_worksheet.get()
 
+    # 問題集のファイルパスを設定
     def set_worksheet_path(self, path):
         return self.path_of_worksheet.set(path)
 
+    # 指定された学年のチェック状態を取得
     def get_grade(self, key):
         return self.grade_check_button_value[key].get()
 
+    # 指定された学年のチェック状態を設定
     def set_grade(self, key, checked):
         self.grade_check_button_value[key].set(checked)
 
+    # 出題数を取得
     def get_number_of_problem(self):
         num = self.number_of_problem.get()
         try:
@@ -316,6 +341,7 @@ class KanjiQuizMaker:
         except (ValueError, TypeError):
             return 0
 
+    # 出題数を設定
     def set_number_of_problem(self, num):
         self.number_of_problem.set(str(num))
 
@@ -343,13 +369,13 @@ class KanjiQuizMaker:
         # 煩わしいため、メッセージボックスは使用しない
         getattr(self, 'student_name_entry').delete(0, ctk.END)
 
-        # 状態を更新
+        # UIや状態の更新処理（ボタンの有効化など）
         self.change_status()
 
     # イベント発生条件：「生徒選択」コンボボックスを押し、生徒を選択したとき
     # 処理概要：選択した生徒の設定に変更する
     def event_select_student(self, event):
-        # 状態を更新
+        # UIや状態の更新処理（ボタンの有効化など）
         self.change_status()
 
     # イベント発生条件：「削除」ボタンを押したとき
@@ -363,7 +389,7 @@ class KanjiQuizMaker:
                 self.setting_file.delete_student(student_name)
                 self.set_student_name('')
 
-        # 状態を更新
+        # UIや状態の更新処理（ボタンの有効化など）
         self.change_status()
 
     # イベント発生条件：「選択」ボタンを押したとき
@@ -382,76 +408,98 @@ class KanjiQuizMaker:
         # 設定ファイルに相対パスを登録する
         self.setting_file.set_worksheet_path(self.get_student_name(), os.path.relpath(path))
 
-        # 状態を更新
+        # UIや状態の更新処理（ボタンの有効化など）
         self.change_status()
 
     # イベント発生条件：「出題反映選択」チェックボックスを選択したとき
     # 処理概要：チェックボックスの値が変化したとき、設定を反映する
     def event_check_button(self):
+        # 設定ファイルに定義された学年ごとにチェック状態を取得・保存
         for key in self.setting_file.GRADES:
+            # 該当学年のチェック状態を取得（True/False）
             checked = self.get_grade(key)
+            # 生徒名と学年に対応する設定を保存
             self.setting_file.set_grade(self.get_student_name(), key, checked)
 
-    # イベント発生条件：「出題数」エントリーを変更したとき
-    # 処理概要：出題数を更新する
+        # UIや状態の更新処理（ボタンの有効化など）
+        self.change_status()
+
+    # イベント発生条件：「出題数」エントリーのフォーカスが外れたとき
+    # 処理概要：出題数を0〜20の範囲に制限し、設定ファイルに保存する
     def event_change_number_of_problem(self, *args):
+        # 入力された出題数を取得し、最大値20に制限
+        num = min(self.get_number_of_problem(), 20)
+        # 最小値0に制限（負の値や空入力への対策）
+        num = max(num, 0)
+
+        # UI上の出題数を更新（制限後の値を反映）
+        self.set_number_of_problem(num)
+
+        # 設定ファイルに出題数を保存（生徒名と紐付け）
         self.setting_file.set_number_of_problem(
             self.get_student_name(),
-            self.get_number_of_problem()
+            num
         )
 
     def event_generate(self):
         grade_list = []
-        i = 1
+        i = 1  # 学年のインデックス（1始まり）
         for key in self.setting_file.GRADES:
-            checked = self.get_grade(key)
+            checked = self.get_grade(key)  # 該当学年が選択されているかを取得
             if checked:
-                grade_list.append(i)
+                grade_list.append(i)  # 選択されていればインデックスを追加
 
-            i = i + 1
-
+            i = i + 1  # 次の学年へインデックスを進める
+        # 漢字プリントを作成する
         self.generate_quiz.create(
-              self.kanji_quiz_path
-            , self.worksheet
-            , self.get_number_of_problem()
-            , grade_list
-            , self.get_student_name()
+              self.kanji_quiz_path          # 保存先ファイルパス
+            , self.worksheet                # ワークシート情報
+            , self.get_number_of_problem()  # 出題数
+            , grade_list                    # 対象学年のインデックスリスト
+            , self.get_student_name()       # 生徒名
         )
+        # 作成完了メッセージを表示
         msgbox.showinfo('Info', self.INFO_QUIZ_CREATED)
-
+        # UIや状態の更新処理（ボタンの有効化など）
         self.change_status()
 
     def event_print(self):
-        if os.path.exists(self.kanji_quiz_path):
-            subprocess.Popen(f'start "" "{self.kanji_quiz_path}"', shell=True)
-        else:
-            msgbox.showerror('Error', self.ERROR_FILE_NOT_FOUND)
+        try:
+            # 相対パスを絶対パスに変換
+            full_path = os.path.abspath(self.kanji_quiz_path)
+            # ファイルの存在を確認して開く
+            if os.path.exists(full_path):
+                os.startfile(full_path)
+            else:
+                # ファイルが存在しない場合は、エラーダイアログを表示
+                msgbox.showerror('Error', self.ERROR_FILE_NOT_FOUND)
+        except Exception as e:
+            # ファイルの起動処理中に予期しない例外が発生した場合は、詳細を含めてエラーダイアログを表示
+            msgbox.showerror('Error', f'ファイルの起動中にエラーが発生しました: {e}')
 
-    def change_status(self):
+    def init_status(self):
         # 「登録」ボタンを有効化
         getattr(self, 'register_student_button').configure(state=ctk.NORMAL)
 
+    def change_status(self):
         # 「生徒選択」エントリーを更新する
         self.select_student_combobox.configure(values=self.setting_file.get_student_list())
 
         student_name = self.get_student_name()
         if len(student_name) > 0:
-            # 「削除」ボタンを有効化
-            getattr(self, 'delete_student_button').configure(state=ctk.NORMAL)
+            state = ctk.NORMAL
+            path = self.setting_file.get_worksheet_path(student_name)
         else:
-            # 「削除」ボタンを無効化
-            getattr(self, 'delete_student_button').configure(state=ctk.DISABLED)
+            state = ctk.DISABLED
+            path = ''
 
-        if len(student_name) > 0:
-            # 「生徒選択」ボタンの有効化
-            getattr(self, 'select_worksheet_button').configure(state=ctk.NORMAL)
-            # 「問題集選択」エントリーにパスを表示する
-            self.set_worksheet_path(self.setting_file.get_worksheet_path(student_name))
-        else:
-            # 「生徒選択」ボタンの無効化
-            getattr(self, 'select_worksheet_button').configure(state=ctk.DISABLED)
-            # 「問題集選択」エントリーを初期化
-            self.set_worksheet_path('')#
+        # 「削除」ボタンを有効/無効化
+        getattr(self, 'delete_student_button').configure(state=state)
+        # 「生徒選択」ボタンの有効/無効化
+        getattr(self, 'select_worksheet_button').configure(state=state)
+
+        # 「問題集選択」エントリーにパスを表示する
+        self.set_worksheet_path(path)
 
         if len(student_name) > 0:
             # 「出題範囲選択」のチェックボタンの有効化とチェックボタンの更新
@@ -486,7 +534,11 @@ class KanjiQuizMaker:
             else:
                 getattr(self, 'generate_button').configure(state=ctk.DISABLED)
 
-        self.kanji_quiz_path = './' + self.get_student_name() + '.pdf'
+        # 生徒名を取得し、スペースをアンダーバーに置換
+        safe_name = self.get_student_name().replace(' ', '_').replace('　', '_')
+        # ファイルパスを生成（スペースがアンダーバーに置換された状態）
+        self.kanji_quiz_path = './' + safe_name + '.pdf'
+
         if os.path.exists(self.kanji_quiz_path):
             getattr(self, 'print_button').configure(state=ctk.NORMAL)
         else:
@@ -521,7 +573,9 @@ class KanjiQuizMaker:
             getattr(self, f"{key}_value")[last_index].set(total_counts[key])
 
     def run(self):
-        # 状態を更新
+        # UIの初期化
+        self.init_status()
+        # UIや状態の更新処理（ボタンの有効化など）
         self.change_status()
         # GUIアプリケーションのメインループを開始する
         self.root.mainloop()
