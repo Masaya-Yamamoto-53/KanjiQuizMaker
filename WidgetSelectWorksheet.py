@@ -1,4 +1,3 @@
-# WidgetSelectWorksheet.py
 import os
 import customtkinter as ctk
 import tkinter.filedialog as filedialog

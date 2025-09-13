@@ -1,8 +1,6 @@
-# KanjiQuizMaker.py
 import os
 import customtkinter as ctk
 import tkinter.messagebox as msgbox
-import tkinter.filedialog as filedialog
 
 from SettingFile import SettingFile
 from LogFile import LogFile
@@ -187,9 +185,9 @@ class KanjiQuizMaker(Widget):
                     # レポートの更新
                     self.widget_report.update_report(self.worksheet)
                     # 「プリント作成」のエントリーを有効化
-                    self.widget_print.generate_button_config(ctk.NORMAL)
+                    self.widget_print.set_generate_button_state(ctk.NORMAL)
                 else:
-                    self.widget_print.generate_button_config(ctk.DISABLED)
+                    self.widget_print.set_generate_button_state(ctk.DISABLED)
 
         # 「作成」ボタンを押したとき
         if event_num == Widget.Event_Generate:
@@ -212,9 +210,9 @@ class KanjiQuizMaker(Widget):
                 self.logfile.create_logfile(self.log_file_path)
 
         if os.path.exists(self.kanji_file_path):
-            self.widget_print.print_button_config(ctk.NORMAL)
+            self.widget_print.set_print_button_state(ctk.NORMAL)
         else:
-            self.widget_print.print_button_config(ctk.DISABLED)
+            self.widget_print.set_print_button_state(ctk.DISABLED)
 
         # 「印刷」ボタンを押したとき
         if event_num == Widget.Event_Print:

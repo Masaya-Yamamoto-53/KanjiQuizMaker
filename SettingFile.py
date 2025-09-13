@@ -1,4 +1,3 @@
-# SettingFile.py
 import pandas as pd
 
 class SettingFile:

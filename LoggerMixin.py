@@ -1,5 +1,3 @@
-# LoggerMixin.py
-
 class LoggerMixin:
     def __init__(self, debug = False):
         # デバッグ情報を表示する場合はTrue

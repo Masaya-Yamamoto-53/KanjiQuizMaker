@@ -1,7 +1,5 @@
-# GenerateQuiz.py
 import datetime as datetime
 import pandas as pd
-import numpy as np
 from OutputQuiz import OutputQuiz
 
 class GenerateQuiz:

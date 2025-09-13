@@ -1,4 +1,3 @@
-# WidgetSelectStudent.py
 import customtkinter as ctk
 import tkinter.messagebox as msgbox
 from Widget import Widget

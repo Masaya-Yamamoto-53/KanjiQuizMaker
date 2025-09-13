@@ -1,4 +1,3 @@
-# WidgetNumberOfProblem.py
 import customtkinter as ctk
 from Widget import Widget
 
@@ -9,23 +8,24 @@ class WidgetNumberOfProblem(Widget):
         self.select_student = select_student
         self.status_callback = status_callback
         self.number_of_problem = ctk.StringVar()
+        self.number_of_problem_entry = None
 
     # 「出題数」ウィジェット作成
     def create(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
 
         self.create_label(frame, 0, 0, u'出題数')
-        self.create_entry(
+        self.number_of_problem_entry = self.create_entry(
               frame
             , 1
             , 0
             , 50
             , None
-            , 'number_of_problem_entry'
+            , None
             , self.number_of_problem
             , ctk.DISABLED
         )
-        getattr(self, 'number_of_problem_entry').bind('<FocusOut>', self.event_change_number_of_problem)
+        self.number_of_problem_entry.bind('<FocusOut>', self.event_change_number_of_problem)
 
     # 出題数を取得（文字列を整数に変換、失敗時は0を返す）
     def get_number_of_problem(self):
@@ -41,7 +41,8 @@ class WidgetNumberOfProblem(Widget):
 
     # エントリーの状態（有効／無効）を設定
     def set_entry_state(self, state):
-        getattr(self, 'number_of_problem_entry').configure(state = state)
+        if self.number_of_problem_entry:
+            self.number_of_problem_entry.configure(state = state)
 
     # イベント発生条件：「出題数」エントリーのフォーカスが外れたとき
     # 処理概要：出題数を0〜20の範囲に制限し、設定ファイルに保存する

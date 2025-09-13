@@ -1,4 +1,3 @@
-# column_names.py
 class ColumnNames:
     GRADE   = '学年'
     PROBLEM = '問題文'

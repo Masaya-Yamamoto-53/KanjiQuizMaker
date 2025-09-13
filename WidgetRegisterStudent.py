@@ -1,4 +1,3 @@
-# WidgetRegisterStudent.py
 import customtkinter as ctk
 import tkinter.messagebox as msgbox
 from Widget import Widget
@@ -8,39 +7,41 @@ class WidgetRegisterStudent(Widget):
         super().__init__()
         self.setting_file = setting_file
         self.status_callback = status_callback
+        self.student_name_entry = None
+        self.register_student_button = None
 
     # 「生徒登録」ウィジェット作成
     def create(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
         self.create_label(frame, 0, 0, u'生徒登録')
-        self.create_entry(
+        self.student_name_entry = self.create_entry(
               frame
             , 1, 0
             , 200
             , u'生徒名を入力'
-            , 'student_name_entry'
+            , None
             , None
             , 'normal'
         )
-        self.create_button(
+        self.register_student_button = self.create_button(
               frame
             , 1, 1
             , u'登録'
             , self.event_register_student
-            , 'register_student_button'
         )
 
     # 「生徒登録」エントリーの値を取得
     def get_student_name_entry(self):
-        return getattr(self, 'student_name_entry').get()
+        return self.student_name_entry.get()
 
     # 「生徒登録」エントリーの値を削除
     def clear_student_name_entry(self):
-        getattr(self, 'student_name_entry').delete(0, ctk.END)
+        self.student_name_entry.delete(0, ctk.END)
 
-    # ボタンの設定を変更
+    # 登録ボタンの状態を変更
     def button(self, state):
-        getattr(self, 'register_student_button').configure(state = state)
+        if self.register_student_button:
+            self.register_student_button.configure(state = state)
 
     # イベント発生条件：「登録」ボタンを押したとき
     # 処理概要：「生徒登録」エントリーに記入した名前を設定ファイルに登録する
