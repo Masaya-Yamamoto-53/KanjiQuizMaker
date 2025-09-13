@@ -7,6 +7,9 @@ class WidgetScore(Widget):
         self.setting_file = setting_file
         self.select_student = select_student
         self.status_callback = status_callback
+        self.button_all_correct = None
+        self.button_all_incorrect = None
+        self.button_done = None
 
         self.keys = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
                      '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
@@ -25,25 +28,22 @@ class WidgetScore(Widget):
         self.scoring_answer_texts = {}
         self.scoring_answer_buttons = {}
 
-        keys_top = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩']
-        keys_btm = ['⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
-
-        self.create_scoring_widgets(top_frame, keys_top)
-        self.create_scoring_widgets(btm_frame, keys_btm)
+        self.create_scoring_widgets(top_frame, self.keys[:10])
+        self.create_scoring_widgets(btm_frame, self.keys[10:])
 
         menu_frame.grid_columnconfigure((0, 6), weight=1)
 
-        self.create_button(
+        self.button_all_correct = self.create_button(
               menu_frame, 0, 2, '全て○'
-            , self.event_on_all_correct_clicked, 'button_all_correct'
+            , self.event_on_all_correct_clicked
         )
-        self.create_button(
+        self.button_all_incorrect = self.create_button(
               menu_frame, 0, 3, '全て×'
-            , self.event_on_all_incorrect_clicked, 'button_all_incorrect'
+            , self.event_on_all_incorrect_clicked
         )
-        self.create_button(
+        self.button_done = self.create_button(
               menu_frame, 0, 4, '採点完了'
-            , self.event_on_scoring_done, 'button_done'
+            , self.event_on_scoring_done
         )
 
     def create_scoring_widgets(self, parent_frame, keys):

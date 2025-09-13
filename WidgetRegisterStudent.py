@@ -39,7 +39,7 @@ class WidgetRegisterStudent(Widget):
         self.student_name_entry.delete(0, ctk.END)
 
     # 登録ボタンの状態を変更
-    def button(self, state):
+    def set_button_state(self, state):
         if self.register_student_button:
             self.register_student_button.configure(state = state)
 
