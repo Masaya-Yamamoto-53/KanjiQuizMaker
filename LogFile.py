@@ -6,13 +6,16 @@ from ColumnNames import ColumnNames
 from LoggerMixin import LoggerMixin
 
 class LogFile(LoggerMixin):
+    Answer = ColumnNames.ANSWER  # 答え
+    Result = ColumnNames.RESULT  # 結果
+
     def __init__(self):
         super().__init__(True)
-
-        self.Answer = ColumnNames.ANSWER # 答え
-        self.Result = ColumnNames.RESULT # 結果
-
         self.logfile = pd.DataFrame()
+        self.path_of_logfile = ''
+
+    def get_logfile_path(self):
+        return self.path_of_logfile
 
     def set_logfile(self, logfile):
         self.logfile = logfile
@@ -21,6 +24,7 @@ class LogFile(LoggerMixin):
         self.logfile.to_csv(path, encoding='shift-jis')
 
     def load_logfile(self, path):
+        self.path_of_logfile = path
         try:
             self.logfile = self.read_csv_file(path)
         except Exception as e:

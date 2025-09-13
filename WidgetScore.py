@@ -1,0 +1,162 @@
+# WidgetScore.py
+import customtkinter as ctk
+import tkinter.messagebox as msgbox
+from Widget import Widget
+
+class WidgetScore(Widget):
+    def __init__(self, setting_file, select_student, status_callback):
+        super().__init__()
+        self.setting_file = setting_file
+        self.select_student = select_student
+        self.status_callback = status_callback
+
+        self.keys = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
+                     '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
+
+    def set_logfile(self, logfile):
+        self.logfile = logfile
+
+    # 採点
+    def create(self, frame, row, column):
+        self.create_label(frame, 0, 0, u'採点')
+
+        top_frame = self.create_frame(frame, 1, 0, None)
+        btm_frame = self.create_frame(frame, 2, 0, None)
+        menu_frame = self.create_frame(frame, 3, 0, None)
+
+        self.scoring_answer_texts = {}
+        self.scoring_answer_buttons = {}
+
+        keys_top = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩']
+        keys_btm = ['⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
+
+        self.create_scoring_widgets(top_frame, keys_top)
+        self.create_scoring_widgets(btm_frame, keys_btm)
+
+        menu_frame.grid_columnconfigure((0, 6), weight=1)
+
+        self.create_button(
+              menu_frame, 0, 2, '全て○'
+            , self.event_on_all_correct_clicked, 'button_all_correct'
+        )
+        self.create_button(
+              menu_frame, 0, 3, '全て×'
+            , self.event_on_all_incorrect_clicked, 'button_all_incorrect'
+        )
+        self.create_button(
+              menu_frame, 0, 4, '採点完了'
+            , self.event_on_scoring_done, 'button_done'
+        )
+
+    def create_scoring_widgets(self, parent_frame, keys):
+        for i, key in enumerate(keys):
+            col = 9 - i
+
+            # ラベル
+            label = ctk.CTkLabel(parent_frame, text = key, width = 30, font = ('Yu Gothic', 18))
+            label.grid(row = 0, column = col, padx = 2, pady = 2)
+
+            # 縦書き風ラベル群
+            label_frame = ctk.CTkFrame(parent_frame, width=40)
+            label_frame.grid(row=1, column=col, padx=2, pady=(0, 5))
+            self.scoring_answer_texts[key] = []
+
+            for row in range(5):  # 最大6文字まで表示
+                char_label = ctk.CTkLabel(label_frame, text='', font=('Yu Gothic', 20), width=40)
+                char_label.grid(row=row, column=0)
+                self.scoring_answer_texts[key].append(char_label)
+
+            # ボタン
+            button = ctk.CTkButton(
+                  parent_frame
+                , text = '―'
+                , width = 40
+                , font = ('Yu Gothic', 14)
+                , command = lambda k=key: self.event_on_scoring_button_click(k)
+                , state = ctk.DISABLED
+            )
+            button.grid(row = 2, column = col, padx = 2, pady = (0, 5))
+            self.scoring_answer_buttons[key] = button
+
+    def all_correct_button(self, state):
+        self.button_all_correct.configure(state = state)
+
+    def all_incorrect_button(self, state):
+        self.button_all_incorrect.configure(state = state)
+
+    def done_button(self, state):
+        self.button_done.configure(state = state)
+
+    def set_answer(self, answer_list):
+        for i, key in enumerate(self.keys):
+            label_list = self.scoring_answer_texts.get(key)
+            if label_list and isinstance(label_list, list):
+                # 該当する答えがある場合
+                if i < len(answer_list):
+                    answer = str(answer_list[i])
+                    for j in range(len(label_list)):
+                        if j < len(answer):
+                            label_list[j].configure(text=answer[j])
+                        else:
+                            label_list[j].configure(text='')  # 空欄で初期化
+                else:
+                    # 答えがない場合はすべて空欄に初期化
+                    for label in label_list:
+                        label.configure(text='')
+
+    def config_scoring_answer_buttons(self, result_list):
+        for i, key in enumerate(self.keys):
+            if i < len(result_list):
+                self.scoring_answer_buttons[key].configure(state=ctk.NORMAL)
+            else:
+                self.scoring_answer_buttons[key].configure(state=ctk.DISABLED)
+
+    def set_scoring_result(self, result_list):
+        for i, key in enumerate(self.keys):
+            if i >= len(result_list):
+                return
+
+            if result_list[i] == 'm':
+                self.scoring_answer_buttons[key].configure(text = 'M')
+            elif result_list[i] == 'w':
+                self.scoring_answer_buttons[key].configure(text = 'W')
+            elif result_list[i] == 'd':
+                self.scoring_answer_buttons[key].configure(text = 'D')
+            else:
+                self.scoring_answer_buttons[key].configure(text = '―')
+
+    def event_on_scoring_button_click(self, key):
+        if self.scoring_answer_buttons[key].cget('text') != '○':
+            # 現在のボタン表示が「○」でない場合は「○」に変更（正解としてマーク）
+            self.scoring_answer_buttons[key].configure(text = '○')
+        else:
+            # すでに「○」の場合は「×」に変更（不正解としてマーク）
+            self.scoring_answer_buttons[key].configure(text = '×')
+
+        self.status_callback(self.Event_OnScoringButtonClick)
+
+    def event_on_all_correct_clicked(self):
+        # ログファイルから回答リストを取得
+        answer_list = self.logfile.get_answer()
+        # 各キーに対応するボタンを「○」に設定（回答が存在する範囲のみ）
+        for i, key in enumerate(self.keys):
+            if i >= len(answer_list):
+                return
+            self.scoring_answer_buttons[key].configure(text = '○')
+
+        self.status_callback(self.Event_OnAllCorrectClicked)
+
+    def event_on_all_incorrect_clicked(self):
+        # ログファイルから回答リストを取得
+        answer_list = self.logfile.get_answer()
+        # 各キーに対応するボタンを「×」に設定（回答が存在する範囲のみ）
+        for i, key in enumerate(self.keys):
+            if i >= len(answer_list):
+                return
+            self.scoring_answer_buttons[key].configure(text = '×')
+
+        self.status_callback(self.Event_OnAllIncorrectClicked)
+
+    def event_on_scoring_done(self):
+        self.logfile.delete_logfile(self.logfile.get_logfile_path())
+        self.status_callback(self.Event_OnScoringDone)
