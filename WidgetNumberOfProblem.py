@@ -10,6 +10,7 @@ class WidgetNumberOfProblem(Widget):
         self.status_callback = status_callback
         self.number_of_problem = ctk.StringVar()
 
+    # 「出題数」ウィジェット作成
     def create(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
 
@@ -26,7 +27,7 @@ class WidgetNumberOfProblem(Widget):
         )
         getattr(self, 'number_of_problem_entry').bind('<FocusOut>', self.event_change_number_of_problem)
 
-    # 出題数を取得
+    # 出題数を取得（文字列を整数に変換、失敗時は0を返す）
     def get_number_of_problem(self):
         num = self.number_of_problem.get()
         try:
@@ -34,11 +35,12 @@ class WidgetNumberOfProblem(Widget):
         except (ValueError, TypeError):
             return 0
 
-    # 出題数を設定
+    # 出題数を設定（整数を文字列に変換して反映）
     def set_number_of_problem(self, num):
         self.number_of_problem.set(str(num))
 
-    def entry(self, state):
+    # エントリーの状態（有効／無効）を設定
+    def set_entry_state(self, state):
         getattr(self, 'number_of_problem_entry').configure(state = state)
 
     # イベント発生条件：「出題数」エントリーのフォーカスが外れたとき
@@ -58,4 +60,5 @@ class WidgetNumberOfProblem(Widget):
             , num
         )
 
+        # UIや状態の更新処理（ボタンの有効化など）
         self.status_callback(self.Event_ChangeNumberOfProblem)

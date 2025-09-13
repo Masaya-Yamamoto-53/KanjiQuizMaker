@@ -157,7 +157,7 @@ class KanjiQuizMaker(Widget):
                 # 「出題範囲選択」のチェックボタンの有効化とチェックボタンの更新
                 self.widget_select_grade.enable_grade()
                 # 「出題数」のエントリーを有効化
-                self.widget_number_of_problem.entry(ctk.NORMAL)
+                self.widget_number_of_problem.set_entry_state(ctk.NORMAL)
                 self.widget_number_of_problem.set_number_of_problem(
                     self.setting_file.get_number_of_problem(student_name)
                 )
@@ -167,7 +167,7 @@ class KanjiQuizMaker(Widget):
                 # 「出題範囲選択」のチェックボタンの無効化
                 self.widget_select_grade.disable_grade()
                 # 「出題数」のエントリーを無効化
-                self.widget_number_of_problem.entry(ctk.DISABLED)
+                self.widget_number_of_problem.set_entry_state(ctk.DISABLED)
                 self.widget_number_of_problem.set_number_of_problem('')
 
             # 生徒名を取得し、スペースをアンダーバーに置換
