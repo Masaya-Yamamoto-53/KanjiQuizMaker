@@ -86,7 +86,7 @@ class Widget:
 
         return entry
 
-    def create_button(self, frame, row, column, text, command, attr_name):
+    def create_button(self, frame, row, column, text, command, attr_name = None):
         button = ctk.CTkButton(
               frame
             , text = text
@@ -101,4 +101,7 @@ class Widget:
             , padx = 5, pady = 5
             , sticky = 'nesw'
         )
-        setattr(self, attr_name, button)
+        if attr_name:
+            setattr(self, attr_name, button)
+
+        return button
