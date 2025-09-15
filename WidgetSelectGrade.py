@@ -8,6 +8,9 @@ class WidgetSelectGrade(Widget):
         self.select_student = select_student
         self.status_callback = status_callback
 
+        self.grade_check_button_value = {}
+        self.grade_check_button = {}
+
     def create(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
         self.create_label(frame, 0, 0, u'出題範囲選択')
@@ -17,9 +20,6 @@ class WidgetSelectGrade(Widget):
 
         row_num = len(self.setting_file.GRADES) // 2
         frame_list = ([lft_frame] * row_num + [rgt_frame] * row_num)
-
-        self.grade_check_button_value = {}
-        self.grade_check_button = {}
 
         for i, (key, frame) in enumerate(zip(self.setting_file.GRADES, frame_list)):
             self.grade_check_button_value[key] = ctk.BooleanVar(value = False)

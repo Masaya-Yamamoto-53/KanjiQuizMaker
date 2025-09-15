@@ -9,7 +9,9 @@ class WidgetSelectWorksheet(Widget):
         self.setting_file = setting_file
         self.select_student = select_student
         self.status_callback = status_callback
+
         self.path_of_worksheet = ctk.StringVar()
+        self.select_worksheet_button = None
 
     # 問題集選択
     def create(self, frame, row, column):
@@ -24,12 +26,11 @@ class WidgetSelectWorksheet(Widget):
             , self.path_of_worksheet
             , 'readonly'
         )
-        self.create_button(
+        self.select_worksheet_button = self.create_button(
               frame
             , 1, 1
             , u'選択'
             , self.event_select_worksheet
-            , 'select_worksheet_button'
         )
 
     # 問題集のファイルパスを取得
@@ -43,8 +44,8 @@ class WidgetSelectWorksheet(Widget):
     def update_worksheet_path(self):
         self.path_of_worksheet.set(self.setting_file.get_worksheet_path(self.select_student.get_student_name()))
 
-    def button(self, state):
-        getattr(self, 'select_worksheet_button').configure(state = state)
+    def set_button_state(self, state):
+        self.select_worksheet_button.configure(state = state)
 
     # イベント発生条件：「選択」ボタンを押したとき
     # 処理概要：CSVファイルを選択する

@@ -8,11 +8,14 @@ class WidgetSelectStudent(Widget):
         self.setting_file = setting_file
         self.status_callback = status_callback
 
+        self.select_student_combobox_value = None
+        self.select_student_combobox = None
+
     # 生徒選択
     def create(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
         self.create_label(frame, 0, 0, u'生徒選択')
-        self.create_combbox(frame, 1, 0)
+        self.create_combobox(frame, 1, 0)
         self.create_button(
               frame
             , 1, 1
@@ -21,7 +24,7 @@ class WidgetSelectStudent(Widget):
             , 'delete_student_button'
         )
 
-    def create_combbox(self, frame, row, column):
+    def create_combobox(self, frame, row, column):
         if self.setting_file.is_empty():
             values = [u'']
         else:
@@ -46,10 +49,10 @@ class WidgetSelectStudent(Widget):
     def set_student_name(self, student_name):
         self.select_student_combobox_value.set(student_name)
 
-    def set_combobox(self, list):
-        self.select_student_combobox.configure(values = list)
+    def set_combobox(self, student_namelist):
+        self.select_student_combobox.configure(values = student_namelist)
 
-    def button(self, state):
+    def set_button_state(self, state):
         getattr(self, 'delete_student_button').configure(state = state)
 
     # イベント発生条件：「削除」ボタンを押したとき
@@ -68,6 +71,6 @@ class WidgetSelectStudent(Widget):
 
     # イベント発生条件：「生徒選択」コンボボックスを押し、生徒を選択したとき
     # 処理概要：選択した生徒の設定に変更する
-    def event_select_student(self, event):
+    def event_select_student(self, _):
         # UIや状態の更新処理（ボタンの有効化など）
         self.status_callback(self.Event_SelectStudent)

@@ -139,9 +139,9 @@ class KanjiQuizMaker(Widget):
                 state = ctk.NORMAL
 
             # 「削除」ボタンを有効/無効化
-            self.select_student.button(state)
+            self.select_student.set_button_state(state)
             # 「問題集選択」ボタンの有効/無効化
-            self.select_worksheet.button(state)
+            self.select_worksheet.set_button_state(state)
 
             if state == ctk.NORMAL:
                 # 「問題集選択」エントリーにパスを表示する
