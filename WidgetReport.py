@@ -75,6 +75,14 @@ class WidgetReport(Widget):
                 slash_label.grid(row=start_row + i, column=column_offset + 1, sticky='w', padx=5, pady=1)
 
     def update_report(self, worksheet):
+        # worksheetが空の場合は全て0に設定して終了する
+        if worksheet.is_empty():
+            last_index = len(self.setting_file.GRADES)
+            for key in ['outnum', 'tolnum', 'correct', 'incorrect', 'day', 'week', 'month']:
+                for i in range(last_index + 1):
+                    getattr(self, f"{key}_value")[i].set('')
+            return
+
         # 出題数を求める
         def calc_outnum(grade):
             return worksheet.get_count_by(grade) - worksheet.get_count_by(grade, worksheet.NotMk)

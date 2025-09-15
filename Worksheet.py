@@ -50,6 +50,10 @@ class Worksheet(LoggerMixin):
     def is_worksheet_loaded(self, path):
         return not self.worksheet.empty and self.path_of_worksheet == path
 
+    # 漢字プリントの問題集が空か否か
+    def is_empty(self):
+        return self.worksheet.empty
+
     # 漢字プリントの問題集を読み込む
     def load_worksheet(self, path):
         self.path_of_worksheet = path

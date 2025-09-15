@@ -28,10 +28,9 @@ class KanjiQuizMaker(Widget):
         # ウィンドウサイズの変更を禁止
         self.root.resizable(False, False)
 
-        self.setting_file = SettingFile() # 設定ファイル
-        self.logfile = LogFile()          # ログファイル
-
-        self.worksheet = Worksheet(True)  # 問題集
+        self.setting_file = SettingFile()   # 設定ファイル
+        self.logfile = LogFile()            # ログファイル
+        self.worksheet = Worksheet(True)    # 問題集
         self.generate_quiz = GenerateQuiz() # PDF生成用
 
         # 問題集の各列の定義
@@ -44,30 +43,25 @@ class KanjiQuizMaker(Widget):
         self.score = None             # 採点
         self.report = None            # レポート
 
+        self.kanji_file_path = '' # 漢字プリントのパスを作成
+        self.log_file_path = ''   # ログファイルのパスを作成
+
+        # ウィジェットを作成
         self.setup_widgets()
 
     def setup_widgets(self):
         top_frame = self.create_frame(self.root, 0, 0, None)
-
         lft_frame = self.create_frame(top_frame, 0, 0, None)
-        # 生徒登録
-        self.widget_register_student(lft_frame, row=0, column=0)
-        # 生徒選択
-        self.widget_select_student(lft_frame, row=1, column=0)
-        # 問題集選択
-        self.widget_select_worksheet(lft_frame, row=2, column=0)
-        # 出題範囲選択＆出題数
-        self.widget_select_quiz(lft_frame, row=3, column=0)
-        # プリント出力
-        self.widget_print(lft_frame, row=4, column=0)
-
         rgt_frame = self.create_frame(top_frame, 0, 1, None)
-        # 採点
-        self.widget_score(rgt_frame, row=0, column=0)
-
         btm_frame = self.create_frame(self.root, 1, 0, 2)
-        # レポート
-        self.widget_report(btm_frame, row=0, column=0)
+
+        self.widget_register_student(lft_frame, row=0, column=0) # 生徒登録
+        self.widget_select_student(lft_frame, row=1, column=0)   # 生徒選択
+        self.widget_select_worksheet(lft_frame, row=2, column=0) # 問題集選択
+        self.widget_select_quiz(lft_frame, row=3, column=0)      # 出題範囲選択＆出題数
+        self.widget_print(lft_frame, row=4, column=0)            # プリント出力
+        self.widget_score(rgt_frame, row=0, column=0)            # 採点
+        self.widget_report(btm_frame, row=0, column=0)           # レポート
 
     ################################################################################
     # 生徒登録
@@ -127,17 +121,19 @@ class KanjiQuizMaker(Widget):
     # 状態更新
     ################################################################################
     def status_callback(self, event_num):
-        if event_num == Widget.Event_RegisterStudent:
-            # 新しい生徒を登録したため、「生徒選択」コンボボックスを更新する
+        if event_num == Widget.Event_RegisterStudent \
+        or event_num == Widget.Event_DeleteStudent:
+            # 新しい生徒を登録したとき、「生徒選択」コンボボックスを更新する
             self.select_student.set_combobox(self.setting_file.get_student_list())
 
         if event_num == Widget.Event_SelectStudent \
         or event_num == Widget.Event_DeleteStudent:
-            # 変更または、削除したことにより、生徒が変更になったとき
+            # 生徒を変更または、削除したとき
             student_name = self.select_student.get_student_name()
-            state = ctk.DISABLED
             if len(student_name) > 0:
                 state = ctk.NORMAL
+            else:
+                state = ctk.DISABLED
 
             # 「削除」ボタンを有効/無効化
             self.select_student.set_button_state(state)
@@ -173,16 +169,19 @@ class KanjiQuizMaker(Widget):
         if event_num == Widget.Event_SelectStudent \
         or event_num == Widget.Event_DeleteStudent \
         or event_num == Widget.Event_SelectWorksheet:
+            # 問題集の読み込み
             if not self.worksheet.is_worksheet_loaded(self.select_worksheet.get_worksheet_path()):
-                # 問題集の読み込みに成功
+                # 読み込みに成功
                 (errnum, _) = self.worksheet.load_worksheet(self.select_worksheet.get_worksheet_path())
                 if errnum == 0:
-                    # レポートの更新
-                    self.report.update_report(self.worksheet)
-                    # 「プリント作成」のエントリーを有効化
-                    self.print.set_generate_button_state(ctk.NORMAL)
+                    state = ctk.NORMAL
                 else:
-                    self.print.set_generate_button_state(ctk.DISABLED)
+                    state = ctk.DISABLED
+
+                # レポートの更新
+                self.report.update_report(self.worksheet)
+                # 「プリント作成」のエントリーを有効/無効化
+                self.print.set_generate_button_state(state)
 
         # 「作成」ボタンを押したとき
         if event_num == Widget.Event_Generate:
@@ -230,8 +229,6 @@ class KanjiQuizMaker(Widget):
 
         # ログファイルが存在しているとき
         if os.path.exists(self.log_file_path):
-            self.score.set_logfile(self.logfile)
-            self.score.set_worksheet(self.worksheet)
             state = ctk.NORMAL
         else:
             state = ctk.DISABLED
@@ -249,6 +246,7 @@ class KanjiQuizMaker(Widget):
             self.report.update_report(self.worksheet)
             self.update_scoring()
 
+        # 「採点完了」ボタンを押したとき
         if event_num == Widget.Event_OnScoringDone:
             self.worksheet.update_worksheet(self.logfile, self.score.get_result_list())
 
@@ -272,6 +270,7 @@ class KanjiQuizMaker(Widget):
             # 採点ボタンを印字する
             self.score.set_scoring_result(result_list)
         else:
+            self.score.set_scoring_clear()
             self.score.set_answer([])
             self.score.set_result_buttons_state([])
             self.score.set_scoring_result([])

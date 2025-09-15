@@ -24,12 +24,6 @@ class WidgetScore(Widget):
 
         self.result_list = [] # 採点結果
 
-    def set_logfile(self, logfile):
-        self.logfile = logfile
-
-    def set_worksheet(self, worksheet):
-        self.worksheet = worksheet
-
     # 採点
     def create(self, frame, row, column):
         self.create_label(frame, 0, 0, u'採点')
@@ -121,6 +115,10 @@ class WidgetScore(Widget):
                 self.scoring_answer_buttons[key].configure(state=ctk.NORMAL)
             else:
                 self.scoring_answer_buttons[key].configure(state=ctk.DISABLED)
+
+    def set_scoring_clear(self):
+        for key in self.keys:
+            self.scoring_answer_buttons[key].configure(text = '―')
 
     def set_scoring_result(self, result_list):
         for i, key in enumerate(self.keys):
