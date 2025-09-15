@@ -121,14 +121,42 @@ class KanjiQuizMaker(Widget):
     # 状態更新
     ################################################################################
     def status_callback(self, event_num):
+        msg = ''
+        if event_num == self.Event_RegisterStudent:
+            msg = 'Event_RegisterStudent'
+        if event_num == self.Event_DeleteStudent:
+            msg = 'Event_DeleteStudent'
+        if event_num == self.Event_SelectStudent:
+            msg = 'Event_SelectStudent'
+        if event_num == self.Event_SelectWorksheet:
+            msg = 'Event_SelectWorksheet'
+        if event_num == self.Event_CheckButton:
+            msg = 'Event_CheckButton'
+        if event_num == self.Event_ChangeNumberOfProblem:
+            msg = 'Event_ChangeNumberOfProblem'
+        if event_num == self.Event_Generate:
+            msg = 'Event_Generate'
+        if event_num == self.Event_Print:
+            msg = 'Event_Print'
+        if event_num == self.Event_OnScoringButtonClick:
+            msg = 'Event_OnScoringButtonClick'
+        if event_num == self.Event_OnAllCorrectClicked:
+            msg = 'Event_OnAllCorrectClicked'
+        if event_num == self.Event_OnAllIncorrectClicked:
+            msg = 'Event_OnAllIncorrectClicked'
+        if event_num == self.Event_OnScoringDone:
+            msg = 'Event_OnScoringDone'
+
+        self.print_info('called: status_callback: ' + msg)
+
         if event_num == Widget.Event_RegisterStudent \
         or event_num == Widget.Event_DeleteStudent:
-            # 新しい生徒を登録したとき、「生徒選択」コンボボックスを更新する
+            # 生徒を登録または、削除したとき、「生徒選択」コンボボックスを更新する
             self.select_student.set_combobox(self.setting_file.get_student_list())
 
         if event_num == Widget.Event_SelectStudent \
         or event_num == Widget.Event_DeleteStudent:
-            # 生徒を変更または、削除したとき
+            # 生徒を変更したとき（生徒選択または、削除したとき）
             student_name = self.select_student.get_student_name()
             if len(student_name) > 0:
                 state = ctk.NORMAL
@@ -169,13 +197,10 @@ class KanjiQuizMaker(Widget):
         if event_num == Widget.Event_SelectStudent \
         or event_num == Widget.Event_DeleteStudent \
         or event_num == Widget.Event_SelectWorksheet:
-            # 問題集の読み込み
-            if not self.worksheet.is_worksheet_loaded(self.select_worksheet.get_worksheet_path()):
-                self.worksheet.load_worksheet(self.select_worksheet.get_worksheet_path())
+            # 問題集を変更したとき、問題集を読み込む
+            self.worksheet.load_worksheet(self.select_worksheet.get_worksheet_path())
 
-                # レポートの更新
-                self.report.update_report(self.worksheet)
-
+        # 問題集を作成する設定がすべて完了している
         if self.worksheet.is_worksheet_loaded(self.select_worksheet.get_worksheet_path()) \
         and len(self.select_grade.get_grade_list()) > 0:
                 # 「プリント作成」のエントリーを有効/無効化
@@ -193,20 +218,20 @@ class KanjiQuizMaker(Widget):
             if msg != 'no':
                 # 漢字プリントを作成する
                 quiz = self.generate_quiz.create(
-                      self.kanji_file_path # 保存先ファイルパス
-                    , self.worksheet       # ワークシート情報
+                      self.kanji_file_path                            # 保存先ファイルパス
+                    , self.worksheet                                  # ワークシート情報
                     , self.number_of_problem.get_number_of_problem()  # 出題数
                     , self.select_grade.get_grade_list()              # 対象学年のインデックスリスト
-                    , self.select_student.get_student_name() # 生徒名
+                    , self.select_student.get_student_name()          # 生徒名
                 )
                 # ログファイルを作成
                 self.logfile.set_logfile(quiz)
                 self.logfile.create_logfile(self.log_file_path)
 
-                if event_num == Widget.Event_Generate:
-                    # 作成完了メッセージを表示
-                    msgbox.showinfo('Info', u'漢字プリントの作成が完了しました')
+                # 作成完了メッセージを表示
+                msgbox.showinfo('Info', u'漢字プリントの作成が完了しました')
 
+        # 問題集が存在する場合は「印刷」ボタンを有効にする
         if os.path.exists(self.kanji_file_path):
             self.print.set_print_button_state(ctk.NORMAL)
         else:
@@ -227,7 +252,7 @@ class KanjiQuizMaker(Widget):
                 # ファイルの起動処理中に予期しない例外が発生した場合は、詳細を含めてエラーダイアログを表示
                 msgbox.showerror('Error', f'ファイルの起動中にエラーが発生しました: {e}')
 
-        # ログファイルが存在しているとき
+        # ログファイルが存在する場合は「採点」ボタンを有効にする
         if os.path.exists(self.log_file_path):
             state = ctk.NORMAL
         else:
@@ -237,8 +262,6 @@ class KanjiQuizMaker(Widget):
         self.score.set_all_incorrect_button_state(state)
         self.score.set_done_button_state(state)
 
-        # 「作成」ボタンを押したとき
-        # 「採点完了」ボタンを押したとき
         if event_num == Widget.Event_SelectStudent \
         or event_num == Widget.Event_DeleteStudent \
         or event_num == Widget.Event_SelectWorksheet \

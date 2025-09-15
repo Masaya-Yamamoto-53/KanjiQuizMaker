@@ -1,6 +1,7 @@
 import customtkinter as ctk
+from LoggerMixin import LoggerMixin
 
-class Widget:
+class Widget(LoggerMixin):
     Event_RegisterStudent = 0
     Event_DeleteStudent   = 1
     Event_SelectStudent   = 2
@@ -15,6 +16,7 @@ class Widget:
     Event_OnScoringDone = 11
 
     def __init__(self):
+        super().__init__(True)
         pass
 
     def create_frame(self, frame, row, column, columnspan):

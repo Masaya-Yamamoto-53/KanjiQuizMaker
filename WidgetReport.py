@@ -75,6 +75,7 @@ class WidgetReport(Widget):
                 slash_label.grid(row=start_row + i, column=column_offset + 1, sticky='w', padx=5, pady=1)
 
     def update_report(self, worksheet):
+        self.print_info('called: update_report')
         # worksheetが空の場合は全て0に設定して終了する
         if worksheet.is_empty():
             last_index = len(self.setting_file.GRADES)
