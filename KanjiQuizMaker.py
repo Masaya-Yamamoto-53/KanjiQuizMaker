@@ -171,17 +171,17 @@ class KanjiQuizMaker(Widget):
         or event_num == Widget.Event_SelectWorksheet:
             # 問題集の読み込み
             if not self.worksheet.is_worksheet_loaded(self.select_worksheet.get_worksheet_path()):
-                # 読み込みに成功
-                (errnum, _) = self.worksheet.load_worksheet(self.select_worksheet.get_worksheet_path())
-                if errnum == 0:
-                    state = ctk.NORMAL
-                else:
-                    state = ctk.DISABLED
+                self.worksheet.load_worksheet(self.select_worksheet.get_worksheet_path())
 
                 # レポートの更新
                 self.report.update_report(self.worksheet)
+
+        if self.worksheet.is_worksheet_loaded(self.select_worksheet.get_worksheet_path()) \
+        and len(self.select_grade.get_grade_list()) > 0:
                 # 「プリント作成」のエントリーを有効/無効化
-                self.print.set_generate_button_state(state)
+            self.print.set_generate_button_state(ctk.NORMAL)
+        else:
+            self.print.set_generate_button_state(ctk.DISABLED)
 
         # 「作成」ボタンを押したとき
         if event_num == Widget.Event_Generate:
