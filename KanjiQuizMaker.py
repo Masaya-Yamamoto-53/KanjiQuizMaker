@@ -265,6 +265,7 @@ class KanjiQuizMaker(Widget):
         if event_num == Widget.Event_SelectStudent \
         or event_num == Widget.Event_DeleteStudent \
         or event_num == Widget.Event_SelectWorksheet \
+        or event_num == Widget.Event_ChangeNumberOfProblem \
         or event_num == Widget.Event_Generate:
             self.report.update_report(self.worksheet)
             self.update_scoring()

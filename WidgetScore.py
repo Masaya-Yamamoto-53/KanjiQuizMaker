@@ -123,20 +123,20 @@ class WidgetScore(Widget):
     def set_scoring_result(self, result_list):
         for i, key in enumerate(self.keys):
             if i >= len(result_list):
-                return
-
-            if result_list[i] == self.MonthMk:
-                text = 'M'
-            elif result_list[i] == self.WeekMk:
-                text = 'W'
-            elif result_list[i] == self.DayMk:
-                text = 'D'
-            elif result_list[i] == self.IncrctMk:
-                text = '×'
-            elif result_list[i] == self.CrctMk:
-                text = '○'
-            else:
                 text = '―'
+            else:
+                if result_list[i] == self.MonthMk:
+                    text = 'M'
+                elif result_list[i] == self.WeekMk:
+                    text = 'W'
+                elif result_list[i] == self.DayMk:
+                    text = 'D'
+                elif result_list[i] == self.IncrctMk:
+                    text = '×'
+                elif result_list[i] == self.CrctMk:
+                    text = '○'
+                else:
+                    text = '―'
 
             self.scoring_answer_buttons[key].configure(text = text)
 

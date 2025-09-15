@@ -46,13 +46,12 @@ class GenerateQuiz:
         # テスト問題を選定する
         # 間違えた問題のインデックスを取得
         self.list_x = worksheet.get_quiz(worksheet.IncrctMk, grade, self.create_date, sort = True, days = 0)
-        print(self.list_x)
         # 昨日間違えた問題のインデックスを取得する
-        self.list_d = worksheet.get_quiz(worksheet.DayMk, grade, self.create_date, days = 1)
+        self.list_d = worksheet.get_quiz(worksheet.DayMk, grade, self.create_date, sort = True, days = 1)
         # 一週間前に間違えた問題のインデックスを取得する
-        self.list_w = worksheet.get_quiz(worksheet.WeekMk, grade, self.create_date, days = 7 - 1)
+        self.list_w = worksheet.get_quiz(worksheet.WeekMk, grade, self.create_date, sort = True, days = 7 - 1)
         # 一ヶ月前に間違えた問題のインデックスを取得する
-        self.list_m = worksheet.get_quiz(worksheet.MonthMk, grade, self.create_date, days = 7 * 3)
+        self.list_m = worksheet.get_quiz(worksheet.MonthMk, grade, self.create_date, sort = True, days = 7 * 3)
 
         # 問題を連結する
         # 優先順位：
@@ -73,14 +72,14 @@ class GenerateQuiz:
         else:
             # 間違えた問題だけでは不足している場合
             # まだ出題していない問題を抽出する
-            self.list_n = worksheet.get_quiz(worksheet.NotMk, grade, self.create_date)
+            self.list_n = worksheet.get_quiz(worksheet.NotMk, grade, self.create_date, sort = True)
             self.quiz = pd.concat([self.quiz, self.list_n], ignore_index=True)
 
             num_t = num_t - len(self.list_n[0:num])
             if num_t > 0:
                 # 未出題の問題だけでは確保できなかった場合
                 # 既に出題し、正解している問題を候補にする
-                self.list_o = worksheet.get_quiz(worksheet.CrctMk, grade, self.create_date)
+                self.list_o = worksheet.get_quiz(worksheet.CrctMk, grade, self.create_date, sort = True)
                 self.quiz = pd.concat([self.quiz, self.list_o], ignore_index=True)
 
         # 出題をnum数にする
