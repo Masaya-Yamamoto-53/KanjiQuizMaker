@@ -18,9 +18,11 @@ class GenerateQuiz:
         self.list_n = []  # 未出題のインデックス
         self.list_o = []  # 正解している問題のインデックス
 
+        self.create_date = None  # 作成日
+
     def create(self, path, worksheet, num, grade, student_name):
         # 作成日を取得する
-        create_date = pd.to_datetime(datetime.datetime.today())
+        self.create_date = pd.to_datetime(datetime.datetime.today())
 
         # 問題数が20を超えている場合は20にする
         num = min(num, 20)
@@ -34,22 +36,23 @@ class GenerateQuiz:
                 num = num_i
 
         # 問題集を作成する
-        self._create_train_mode(worksheet, num, grade)
+        self.create_train_mode(worksheet, num, grade)
         # PDFを作成する
-        self.output_quiz.create(path, student_name, create_date, num, self.quiz[worksheet.Problem])
+        self.output_quiz.create(path, student_name, self.create_date, num, self.quiz[worksheet.Problem])
 
         return self.quiz
 
-    def _create_train_mode(self, worksheet, num, grade):
+    def create_train_mode(self, worksheet, num, grade):
         # テスト問題を選定する
         # 間違えた問題のインデックスを取得
-        self.list_x = worksheet.get_quiz(worksheet.IncrctMk, grade)
+        self.list_x = worksheet.get_quiz(worksheet.IncrctMk, grade, self.create_date, sort = True, days = 0)
+        print(self.list_x)
         # 昨日間違えた問題のインデックスを取得する
-        self.list_d = worksheet.get_quiz(worksheet.DayMk, grade)
+        self.list_d = worksheet.get_quiz(worksheet.DayMk, grade, self.create_date, days = 1)
         # 一週間前に間違えた問題のインデックスを取得する
-        self.list_w = worksheet.get_quiz(worksheet.WeekMk, grade)
+        self.list_w = worksheet.get_quiz(worksheet.WeekMk, grade, self.create_date, days = 7 - 1)
         # 一ヶ月前に間違えた問題のインデックスを取得する
-        self.list_m = worksheet.get_quiz(worksheet.MonthMk, grade)
+        self.list_m = worksheet.get_quiz(worksheet.MonthMk, grade, self.create_date, days = 7 * 3)
 
         # 問題を連結する
         # 優先順位：
@@ -70,14 +73,14 @@ class GenerateQuiz:
         else:
             # 間違えた問題だけでは不足している場合
             # まだ出題していない問題を抽出する
-            self.list_n = worksheet.get_quiz(worksheet.NotMk, grade)
+            self.list_n = worksheet.get_quiz(worksheet.NotMk, grade, self.create_date)
             self.quiz = pd.concat([self.quiz, self.list_n], ignore_index=True)
 
             num_t = num_t - len(self.list_n[0:num])
             if num_t > 0:
                 # 未出題の問題だけでは確保できなかった場合
                 # 既に出題し、正解している問題を候補にする
-                self.list_o = worksheet.get_quiz(worksheet.CrctMk, grade)
+                self.list_o = worksheet.get_quiz(worksheet.CrctMk, grade, self.create_date)
                 self.quiz = pd.concat([self.quiz, self.list_o], ignore_index=True)
 
         # 出題をnum数にする

@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
+import datetime as datetime
 
 from ColumnNames import ColumnNames
 from LoggerMixin import LoggerMixin
@@ -165,12 +166,27 @@ class Worksheet(LoggerMixin):
         return self.worksheet
 
     # 条件に該当する問題集のインデックスを返す
-    def get_quiz(self, result, grade):
+    def get_quiz(self, result, grade, create_date, sort = False, days = -1):
+        # 毎日同じ時間帯に学習する場合、前日に間違えた問題が抽出されない可能性があるため、
+        # 判定時間に2時間のオフセットを加える。
+        now_time = create_date + datetime.timedelta(hours = 6)
+
         # Grade条件でフィルタ
         grade_filtered = self.worksheet[self.worksheet[self.Grade].isin(grade)]
 
         # Result条件でフィルタ
         if result is np.nan:
-            return grade_filtered[grade_filtered[self.Result].isna()]
+            grade_filtered = grade_filtered[grade_filtered[self.Result].isna()]
         else:
-            return grade_filtered[grade_filtered[self.Result] == result]
+            grade_filtered = grade_filtered[grade_filtered[self.Result] == result]
+            if days != -1:
+                delta = datetime.timedelta(days=days) < (now_time - pd.to_datetime(
+                                                                         grade_filtered[self.LastUpdate]
+                                                                       , format='mixed'
+                                                                    ))
+                grade_filtered = grade_filtered[delta]
+
+        if sort:
+            return grade_filtered.sort_values(self.Problem, ascending = True)
+        else:
+            return grade_filtered
