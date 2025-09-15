@@ -126,19 +126,17 @@ class KanjiQuizMaker(Widget):
     # 状態更新
     ################################################################################
     def status_callback(self, event_num):
-        # 生徒を登録した
         if event_num == Widget.Event_RegisterStudent:
             # 新しい生徒を登録したため、「生徒選択」コンボボックスを更新する
             self.select_student.set_combobox(self.setting_file.get_student_list())
 
         if event_num == Widget.Event_SelectStudent \
         or event_num == Widget.Event_DeleteStudent:
-            # 変更または、削除したことにより、生徒が変更になった
+            # 変更または、削除したことにより、生徒が変更になったとき
             student_name = self.select_student.get_student_name()
+            state = ctk.DISABLED
             if len(student_name) > 0:
                 state = ctk.NORMAL
-            else:
-                state = ctk.DISABLED
 
             # 「削除」ボタンを有効/無効化
             self.select_student.button(state)
@@ -225,6 +223,7 @@ class KanjiQuizMaker(Widget):
                 # ファイルの起動処理中に予期しない例外が発生した場合は、詳細を含めてエラーダイアログを表示
                 msgbox.showerror('Error', f'ファイルの起動中にエラーが発生しました: {e}')
 
+        # ログファイルが存在しているとき
         if os.path.exists(self.log_file_path):
             self.score.set_logfile(self.logfile)
             self.score.set_worksheet(self.worksheet)
@@ -238,9 +237,13 @@ class KanjiQuizMaker(Widget):
 
         # 「作成」ボタンを押したとき
         # 「採点完了」ボタンを押したとき
-        if event_num == Widget.Event_Generate \
+        if event_num == Widget.Event_SelectStudent \
+        or event_num == Widget.Event_DeleteStudent \
+        or event_num == Widget.Event_SelectWorksheet \
+        or event_num == Widget.Event_Generate \
         or event_num == Widget.Event_OnScoringDone:
             self.report.update_report(self.worksheet)
+
             self.update_scoring()
 
         if event_num == Widget.Event_Generate:
@@ -251,8 +254,8 @@ class KanjiQuizMaker(Widget):
         # ログファイルが存在する場合、採点用のフィールドに答えと前回結果を入力する
         if os.path.exists(self.log_file_path):
             self.logfile.load_logfile(self.log_file_path)
-            answer_list = self.logfile.get_answer()
-            result_list = self.logfile.get_result()
+            answer_list = self.logfile.get_answer() # 答えを取得
+            result_list = self.logfile.get_result() # 前回の結果を取得
 
             # 漢字プリントの答えを印字する
             self.score.set_answer(answer_list)
@@ -263,12 +266,14 @@ class KanjiQuizMaker(Widget):
     def init_status(self):
         # 「登録」ボタンを有効化
         self.register_student.set_button_state(ctk.NORMAL)
+        # 既に生徒を選択している場合
+        if len(self.select_student.get_student_name()) > 0:
+            # UIや状態の更新処理（ボタンの有効化など）
+            self.status_callback(Widget.Event_SelectStudent)
 
     def run(self):
         # UIの初期化
         self.init_status()
-        # UIや状態の更新処理（ボタンの有効化など）
-        self.status_callback(Widget.Event_SelectStudent)
         # GUIアプリケーションのメインループを開始する
         self.root.mainloop()
 

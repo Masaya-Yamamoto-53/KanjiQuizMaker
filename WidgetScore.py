@@ -131,9 +131,11 @@ class WidgetScore(Widget):
 
     def event_on_scoring_button_click(self, key):
         if self.scoring_answer_buttons[key].cget('text') != '○':
+            print('o')
             # 現在のボタン表示が「○」でない場合は「○」に変更（正解としてマーク）
             self.scoring_answer_buttons[key].configure(text = '○')
         else:
+            print('x')
             # すでに「○」の場合は「×」に変更（不正解としてマーク）
             self.scoring_answer_buttons[key].configure(text = '×')
 
@@ -164,6 +166,12 @@ class WidgetScore(Widget):
     def event_on_scoring_done(self):
         result_list = []
         for key in self.keys:
+            # ボタンが無効のものは対象外にする
+            button = self.scoring_answer_buttons[key]
+            if button.cget('state') == 'disabled':
+                continue
+
+            # 採点結果がすべて入力済みであることを確認する
             text = self.scoring_answer_buttons[key].cget('text')
             if text == '○':
                 result_list.append(self.CrctMk)
