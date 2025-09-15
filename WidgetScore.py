@@ -12,10 +12,17 @@ class WidgetScore(Widget):
         self.button_all_correct = None
         self.button_all_incorrect = None
         self.button_done = None
+
         self.CrctMk = ColumnNames.CrctMk
         self.IncrctMk = ColumnNames.IncrctMk
+        self.DayMk = ColumnNames.DayMk
+        self.WeekMk = ColumnNames.WeekMk
+        self.MonthMk = ColumnNames.MonthMk
+
         self.keys = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
                      '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
+
+        self.result_list = [] # 採点結果
 
     def set_logfile(self, logfile):
         self.logfile = logfile
@@ -82,13 +89,13 @@ class WidgetScore(Widget):
             button.grid(row = 2, column = col, padx = 2, pady = (0, 5))
             self.scoring_answer_buttons[key] = button
 
-    def all_correct_button(self, state):
+    def set_all_correct_button_state(self, state):
         self.button_all_correct.configure(state = state)
 
-    def all_incorrect_button(self, state):
+    def set_all_incorrect_button_state(self, state):
         self.button_all_incorrect.configure(state = state)
 
-    def done_button(self, state):
+    def set_done_button_state(self, state):
         self.button_done.configure(state = state)
 
     def set_answer(self, answer_list):
@@ -100,15 +107,15 @@ class WidgetScore(Widget):
                     answer = str(answer_list[i])
                     for j in range(len(label_list)):
                         if j < len(answer):
-                            label_list[j].configure(text=answer[j])
+                            label_list[j].configure(text = answer[j])
                         else:
-                            label_list[j].configure(text='')  # 空欄で初期化
+                            label_list[j].configure(text = '')  # 空欄で初期化
                 else:
                     # 答えがない場合はすべて空欄に初期化
                     for label in label_list:
-                        label.configure(text='')
+                        label.configure(text = '')
 
-    def config_scoring_answer_buttons(self, result_list):
+    def set_result_buttons_state(self, result_list):
         for i, key in enumerate(self.keys):
             if i < len(result_list):
                 self.scoring_answer_buttons[key].configure(state=ctk.NORMAL)
@@ -120,51 +127,54 @@ class WidgetScore(Widget):
             if i >= len(result_list):
                 return
 
-            if result_list[i] == 'm':
-                self.scoring_answer_buttons[key].configure(text = 'M')
-            elif result_list[i] == 'w':
-                self.scoring_answer_buttons[key].configure(text = 'W')
-            elif result_list[i] == 'd':
-                self.scoring_answer_buttons[key].configure(text = 'D')
+            if result_list[i] == self.MonthMk:
+                text = 'M'
+            elif result_list[i] == self.WeekMk:
+                text = 'W'
+            elif result_list[i] == self.DayMk:
+                text = 'D'
+            elif result_list[i] == self.IncrctMk:
+                text = '×'
+            elif result_list[i] == self.CrctMk:
+                text = '○'
             else:
-                self.scoring_answer_buttons[key].configure(text = '―')
+                text = '―'
+
+            self.scoring_answer_buttons[key].configure(text = text)
 
     def event_on_scoring_button_click(self, key):
         if self.scoring_answer_buttons[key].cget('text') != '○':
-            print('o')
             # 現在のボタン表示が「○」でない場合は「○」に変更（正解としてマーク）
             self.scoring_answer_buttons[key].configure(text = '○')
         else:
-            print('x')
             # すでに「○」の場合は「×」に変更（不正解としてマーク）
             self.scoring_answer_buttons[key].configure(text = '×')
 
         self.status_callback(self.Event_OnScoringButtonClick)
 
     def event_on_all_correct_clicked(self):
-        # ログファイルから回答リストを取得
-        answer_list = self.logfile.get_answer()
         # 各キーに対応するボタンを「○」に設定（回答が存在する範囲のみ）
-        for i, key in enumerate(self.keys):
-            if i >= len(answer_list):
-                return
+        for key in self.keys:
+            # ボタンが無効のものは対象外にする
+            button = self.scoring_answer_buttons[key]
+            if button.cget('state') == 'disabled':
+                continue
             self.scoring_answer_buttons[key].configure(text = '○')
 
         self.status_callback(self.Event_OnAllCorrectClicked)
 
     def event_on_all_incorrect_clicked(self):
-        # ログファイルから回答リストを取得
-        answer_list = self.logfile.get_answer()
-        # 各キーに対応するボタンを「×」に設定（回答が存在する範囲のみ）
-        for i, key in enumerate(self.keys):
-            if i >= len(answer_list):
-                return
+        # 各キーに対応するボタンを「○」に設定（回答が存在する範囲のみ）
+        for key in self.keys:
+            # ボタンが無効のものは対象外にする
+            button = self.scoring_answer_buttons[key]
+            if button.cget('state') == 'disabled':
+                continue
             self.scoring_answer_buttons[key].configure(text = '×')
 
         self.status_callback(self.Event_OnAllIncorrectClicked)
 
     def event_on_scoring_done(self):
-        result_list = []
         for key in self.keys:
             # ボタンが無効のものは対象外にする
             button = self.scoring_answer_buttons[key]
@@ -174,15 +184,14 @@ class WidgetScore(Widget):
             # 採点結果がすべて入力済みであることを確認する
             text = self.scoring_answer_buttons[key].cget('text')
             if text == '○':
-                result_list.append(self.CrctMk)
+                self.result_list.append(self.CrctMk)
             elif text == '×':
-                result_list.append(self.IncrctMk)
+                self.result_list.append(self.IncrctMk)
             else:
                 msgbox.showerror('Error', '未回答の項目があります')
                 return
 
-        self.worksheet.update_worksheet(self.logfile, result_list)
-
-        # ログファイルを削除する
-        self.logfile.delete_logfile(self.logfile.get_logfile_path())
         self.status_callback(self.Event_OnScoringDone)
+
+    def get_result_list(self):
+        return self.result_list

@@ -32,8 +32,9 @@ class KanjiQuizMaker(Widget):
         self.logfile = LogFile()          # ログファイル
 
         self.worksheet = Worksheet(True)  # 問題集
-        self.generate_quiz = GenerateQuiz()
+        self.generate_quiz = GenerateQuiz() # PDF生成用
 
+        # 問題集の各列の定義
         self.register_student = None  # 生徒登録
         self.select_student = None    # 生徒選択
         self.select_worksheet = None  # 問題集選択
@@ -203,6 +204,10 @@ class KanjiQuizMaker(Widget):
                 self.logfile.set_logfile(quiz)
                 self.logfile.create_logfile(self.log_file_path)
 
+                if event_num == Widget.Event_Generate:
+                    # 作成完了メッセージを表示
+                    msgbox.showinfo('Info', u'漢字プリントの作成が完了しました')
+
         if os.path.exists(self.kanji_file_path):
             self.print.set_print_button_state(ctk.NORMAL)
         else:
@@ -231,24 +236,27 @@ class KanjiQuizMaker(Widget):
         else:
             state = ctk.DISABLED
 
-        self.score.all_correct_button(state)
-        self.score.all_incorrect_button(state)
-        self.score.done_button(state)
+        self.score.set_all_correct_button_state(state)
+        self.score.set_all_incorrect_button_state(state)
+        self.score.set_done_button_state(state)
 
         # 「作成」ボタンを押したとき
         # 「採点完了」ボタンを押したとき
         if event_num == Widget.Event_SelectStudent \
         or event_num == Widget.Event_DeleteStudent \
         or event_num == Widget.Event_SelectWorksheet \
-        or event_num == Widget.Event_Generate \
-        or event_num == Widget.Event_OnScoringDone:
+        or event_num == Widget.Event_Generate:
             self.report.update_report(self.worksheet)
-
             self.update_scoring()
 
-        if event_num == Widget.Event_Generate:
-            # 作成完了メッセージを表示
-            msgbox.showinfo('Info', u'漢字プリントの作成が完了しました')
+        if event_num == Widget.Event_OnScoringDone:
+            self.worksheet.update_worksheet(self.logfile, self.score.get_result_list())
+
+            # ログファイルを削除する
+            self.logfile.delete_logfile(self.logfile.get_logfile_path())
+
+            self.report.update_report(self.worksheet)
+            self.update_scoring()
 
     def update_scoring(self):
         # ログファイルが存在する場合、採点用のフィールドに答えと前回結果を入力する
@@ -260,8 +268,13 @@ class KanjiQuizMaker(Widget):
             # 漢字プリントの答えを印字する
             self.score.set_answer(answer_list)
             # 採点ボタンの状態を印字する
-            self.score.config_scoring_answer_buttons(result_list)
+            self.score.set_result_buttons_state(result_list)
+            # 採点ボタンを印字する
             self.score.set_scoring_result(result_list)
+        else:
+            self.score.set_answer([])
+            self.score.set_result_buttons_state([])
+            self.score.set_scoring_result([])
 
     def init_status(self):
         # 「登録」ボタンを有効化
