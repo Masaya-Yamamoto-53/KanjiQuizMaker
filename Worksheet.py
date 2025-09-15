@@ -22,12 +22,12 @@ class Worksheet(LoggerMixin):
         self.History = ColumnNames.HISTORY          # 履歴
 
         # 漢字テストの結果
-        self.NotMk = np.nan
-        self.CrctMk = 'o'
-        self.IncrctMk = 'x'
-        self.DayMk = 'd'
-        self.WeekMk = 'w'
-        self.MonthMk = 'm'
+        self.NotMk = ColumnNames.NotMk
+        self.CrctMk = ColumnNames.CrctMk
+        self.IncrctMk = ColumnNames.IncrctMk
+        self.DayMk = ColumnNames.DayMk
+        self.WeekMk = ColumnNames.WeekMk
+        self.MonthMk = ColumnNames.MonthMk
 
         # レポートの辞書キー
         self.report_key_list = [
@@ -87,6 +87,61 @@ class Worksheet(LoggerMixin):
             error_message.append(self.print_error(u'問題集が存在しません'))
 
         return error_message
+
+    def update_worksheet(self, logfile, result):
+        matched_indices_list = []
+
+        for i in range(len(logfile.logfile)):
+            log_val = logfile.logfile.iloc[i][self.Problem]
+            matches = self.worksheet[self.Problem] == log_val
+
+            # 一致したインデックスを取得
+            matched_indices = self.worksheet[matches].index.tolist()
+            matched_indices_list.append(matched_indices)
+
+            # History と LastUpdate の値を取得
+            raw_history = logfile.logfile.iloc[i][self.History]
+            new_update_time = logfile.logfile.iloc[i][self.LastUpdate]
+
+            new = result[i]  # 今回の結果
+
+            for idx in matched_indices:
+                current_history = self.worksheet.at[idx, self.History]
+                if pd.isna(current_history):
+                    updated_history = str(result[i])
+                else:
+                    updated_history = str(raw_history) + str(result[i])
+
+                self.worksheet.at[idx, self.History] = updated_history
+                self.worksheet.at[idx, self.LastUpdate] = new_update_time
+
+                # [結果]列を更新する.
+                # 【凡例】
+                # NaN: self.kNotMk   : 未実施
+                #   o: self.kCrctMk  : 今回正解
+                #   x: self.kIncrctMk: 今回不正解
+                #   d: self.kDayMk   : 1日後に実施(前回xで今回oの時)
+                #   w: self.kWeekMk  : 1週間後に実施(前回dで今回oの時)
+                #   m: self.kMonthMk : 1ヶ月後に実施(前回wで今回oの時)
+
+                # 今回, 正解した場合.
+                old = self.worksheet.at[idx, self.Result]  # 以前の結果
+                if new == self.CrctMk:
+                    if old == self.IncrctMk:  # x -> d
+                        key = self.DayMk
+                    elif old == self.DayMk:  # d -> w
+                        key = self.WeekMk
+                    elif old == self.WeekMk:  # w -> m
+                        key = self.MonthMk
+                    else:  # m -> o or - -> o
+                        key = self.CrctMk
+                # 今回, 不正解の場合
+                else:  # x
+                    key = self.IncrctMk
+
+                self.worksheet.at[idx, self.Result] = key
+
+        self.save_worksheet()
 
     # 指定した学年と結果に一致する問題数を取得する
     def get_count_by(self, grade, result=None):

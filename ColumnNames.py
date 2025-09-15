@@ -1,3 +1,5 @@
+import numpy as np
+
 class ColumnNames:
     GRADE   = '学年'
     PROBLEM = '問題文'
@@ -20,3 +22,11 @@ class ColumnNames:
     ]
 
     GRADE_RANGE = [1, 6]
+
+    # 漢字テストの結果
+    NotMk = np.nan
+    CrctMk = 'o'
+    IncrctMk = 'x'
+    DayMk = 'd'
+    WeekMk = 'w'
+    MonthMk = 'm'

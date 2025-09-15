@@ -1,12 +1,13 @@
 import os
 import pandas as pd
-
+from datetime import datetime
 from ColumnNames import ColumnNames
 from LoggerMixin import LoggerMixin
 
 class LogFile(LoggerMixin):
     Answer = ColumnNames.ANSWER  # 答え
     Result = ColumnNames.RESULT  # 結果
+    LastUpdate = ColumnNames.LAST_UPDATE  # 最終更新日
 
     def __init__(self):
         super().__init__(True)
@@ -20,6 +21,9 @@ class LogFile(LoggerMixin):
         self.logfile = logfile
 
     def create_logfile(self, path):
+        # 最新の日付を取得
+        now = datetime.today()
+        self.logfile[self.LastUpdate] = now
         self.logfile.to_csv(path, encoding='shift-jis')
 
     def load_logfile(self, path):

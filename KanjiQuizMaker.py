@@ -122,6 +122,9 @@ class KanjiQuizMaker(Widget):
         self.report = WidgetReport(self.setting_file, self.select_student, self.status_callback)
         self.report.create(frame, 0, 0)
 
+    ################################################################################
+    # 状態更新
+    ################################################################################
     def status_callback(self, event_num):
         # 生徒を登録した
         if event_num == Widget.Event_RegisterStudent:
@@ -224,6 +227,7 @@ class KanjiQuizMaker(Widget):
 
         if os.path.exists(self.log_file_path):
             self.score.set_logfile(self.logfile)
+            self.score.set_worksheet(self.worksheet)
             state = ctk.NORMAL
         else:
             state = ctk.DISABLED
@@ -236,7 +240,7 @@ class KanjiQuizMaker(Widget):
         # 「採点完了」ボタンを押したとき
         if event_num == Widget.Event_Generate \
         or event_num == Widget.Event_OnScoringDone:
-            self.widget_report.update_report(self.worksheet)
+            self.report.update_report(self.worksheet)
             self.update_scoring()
 
         if event_num == Widget.Event_Generate:
@@ -251,10 +255,10 @@ class KanjiQuizMaker(Widget):
             result_list = self.logfile.get_result()
 
             # 漢字プリントの答えを印字する
-            self.widget_score.set_answer(answer_list)
+            self.score.set_answer(answer_list)
             # 採点ボタンの状態を印字する
-            self.widget_score.config_scoring_answer_buttons(result_list)
-            self.widget_score.set_scoring_result(result_list)
+            self.score.config_scoring_answer_buttons(result_list)
+            self.score.set_scoring_result(result_list)
 
     def init_status(self):
         # 「登録」ボタンを有効化

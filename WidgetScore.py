@@ -1,5 +1,7 @@
 import customtkinter as ctk
+import tkinter.messagebox as msgbox
 from Widget import Widget
+from ColumnNames import ColumnNames
 
 class WidgetScore(Widget):
     def __init__(self, setting_file, select_student, status_callback):
@@ -10,12 +12,16 @@ class WidgetScore(Widget):
         self.button_all_correct = None
         self.button_all_incorrect = None
         self.button_done = None
-
+        self.CrctMk = ColumnNames.CrctMk
+        self.IncrctMk = ColumnNames.IncrctMk
         self.keys = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
                      '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
 
     def set_logfile(self, logfile):
         self.logfile = logfile
+
+    def set_worksheet(self, worksheet):
+        self.worksheet = worksheet
 
     # 採点
     def create(self, frame, row, column):
@@ -156,5 +162,19 @@ class WidgetScore(Widget):
         self.status_callback(self.Event_OnAllIncorrectClicked)
 
     def event_on_scoring_done(self):
+        result_list = []
+        for key in self.keys:
+            text = self.scoring_answer_buttons[key].cget('text')
+            if text == '○':
+                result_list.append(self.CrctMk)
+            elif text == '×':
+                result_list.append(self.IncrctMk)
+            else:
+                msgbox.showerror('Error', '未回答の項目があります')
+                return
+
+        self.worksheet.update_worksheet(self.logfile, result_list)
+
+        # ログファイルを削除する
         self.logfile.delete_logfile(self.logfile.get_logfile_path())
         self.status_callback(self.Event_OnScoringDone)
