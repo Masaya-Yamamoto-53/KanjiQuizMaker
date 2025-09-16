@@ -74,6 +74,9 @@ class Worksheet(LoggerMixin):
             self.worksheet = pd.DataFrame()
             error_message.append(self.print_info('問題集(' + path + ')の読み込みに失敗しました'))
 
+        # 学年ごとの出題漢字リストを作成する
+        self.create_kanji_list()
+
         return len(error_message), error_message
 
     # 漢字プリントの問題集を書き込む
@@ -92,6 +95,47 @@ class Worksheet(LoggerMixin):
             error_message.append(self.print_error(u'問題集が存在しません'))
 
         return error_message
+
+    # 問題集から学年に対応する漢字をリスト化する
+    def create_kanji_list(self):
+        grade_pre = []  # 前の学年の漢字リスト
+        for grade in range(self.GradeRange[0], self.GradeRange[-1] + 1):
+            # 学年委該当するデータを抽出する
+            worksheet = self.get_worksheet_by([grade])
+
+            # 抽出したデータが存在する場合
+            if len(worksheet) > 0:
+                # 1語ずつ配列に格納する
+                for ans in worksheet[self.Answer]:
+                    self.kanji_by_grade_list[grade].extend([char for char in ans])
+
+                # ソートして、ユニークにする
+                self.kanji_by_grade_list[grade] = sorted(self.kanji_by_grade_list[grade])
+                self.kanji_by_grade_list[grade] = list(set(self.kanji_by_grade_list[grade]))
+
+                # 前の学年の漢字のみ取り除く
+                self.kanji_by_grade_list[grade] = list(set(self.kanji_by_grade_list[grade]) - set(grade_pre))
+
+                # 現在の学年の漢字だけを残すため、それ以降の漢字を記憶しておく
+                grade_pre = grade_pre + self.kanji_by_grade_list[grade]
+
+                # 学年毎に習う漢字数を表示する.
+                self.print_info('小学' + str(grade) + '年生: 全 ' + str(len(self.kanji_by_grade_list[grade])) + ' 文字')
+
+    # 指定した学年の問題を取得する
+    def get_worksheet_by(self, grade):
+        return self.worksheet[self.worksheet[self.Grade].isin(grade)]
+
+    # 漢字を取得する
+    def get_kanji_list(self, grades):
+        kanji_list = []
+        for grade in grades:
+            kanji_list.extend(self.kanji_by_grade_list[grade])
+        return kanji_list
+
+    # 問題集を取得する
+    def get_list(self):
+        return self.worksheet
 
     def update_worksheet(self, logfile, result):
         matched_indices_list = []
@@ -161,12 +205,8 @@ class Worksheet(LoggerMixin):
             # 学年と結果の両方が指定された場合
             return int(((df[self.Grade] == grade) & (df[self.Result] == result)).sum())
 
-    # 問題集を取得する
-    def get_list(self):
-        return self.worksheet
-
     # 条件に該当する問題集のインデックスを返す
-    def get_quiz(self, result, grade, create_date, sort = False, days = -1):
+    def get_quiz(self, result, grade, create_date, shuffle = False, days = -1):
         # 毎日同じ時間帯に学習する場合、前日に間違えた問題が抽出されない可能性があるため、
         # 判定時間に2時間のオフセットを加える。
         now_time = create_date + datetime.timedelta(hours = 6)
@@ -186,7 +226,7 @@ class Worksheet(LoggerMixin):
                                                                     ))
                 grade_filtered = grade_filtered[delta]
 
-        if sort:
-            return grade_filtered.sort_values(self.Problem, ascending = True)
+        if shuffle:
+            return grade_filtered.sample(frac=1).reset_index(drop=True)
         else:
             return grade_filtered
