@@ -139,6 +139,7 @@ class Worksheet(LoggerMixin):
 
     def update_worksheet(self, logfile, result):
         matched_indices_list = []
+        unmatched_count = 0  # 一致しなかった件数
 
         for i in range(len(logfile.logfile)):
             log_val = logfile.logfile.iloc[i][self.Problem]
@@ -148,13 +149,14 @@ class Worksheet(LoggerMixin):
             matched_indices = self.worksheet[matches].index.tolist()
             matched_indices_list.append(matched_indices)
 
-            # History と LastUpdate の値を取得
-            raw_history = logfile.logfile.iloc[i][self.History]
-            new_update_time = logfile.logfile.iloc[i][self.LastUpdate]
-
-            new = result[i]  # 今回の結果
+            if not matched_indices:
+                unmatched_count += 1
 
             for idx in matched_indices:
+                raw_history = logfile.logfile.iloc[i][self.History]
+                new_update_time = logfile.logfile.iloc[i][self.LastUpdate]
+                new = result[i]  # 今回の結果
+
                 current_history = self.worksheet.at[idx, self.History]
                 if pd.isna(current_history):
                     updated_history = str(result[i])
@@ -190,7 +192,12 @@ class Worksheet(LoggerMixin):
 
                 self.worksheet.at[idx, self.Result] = key
 
+        if unmatched_count > 0:
+            self.print_error("ログがワークシートと一致しません。処理を中断します")
+            return False
+
         self.save_worksheet()
+        return True
 
     # 指定した学年と結果に一致する問題数を取得する
     def get_count_by(self, grade, result=None):

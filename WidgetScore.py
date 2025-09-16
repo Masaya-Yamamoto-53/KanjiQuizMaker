@@ -173,6 +173,7 @@ class WidgetScore(Widget):
         self.status_callback(self.Event_OnAllIncorrectClicked)
 
     def event_on_scoring_done(self):
+        self.result_list = []
         for key in self.keys:
             # ボタンが無効のものは対象外にする
             button = self.scoring_answer_buttons[key]

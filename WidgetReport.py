@@ -1,3 +1,4 @@
+import re
 import customtkinter as ctk
 from Widget import Widget
 
@@ -58,7 +59,7 @@ class WidgetReport(Widget):
                 value_dict[i] = ctk.StringVar(value="")
                 entry = ctk.CTkEntry(
                       frame
-                    , width=50
+                    , width=70
                     , textvariable=value_dict[i]
                     , justify='right'
                     , state='readonly'
@@ -74,7 +75,17 @@ class WidgetReport(Widget):
                 )
                 slash_label.grid(row=start_row + i, column=column_offset + 1, sticky='w', padx=5, pady=1)
 
-    def update_report(self, worksheet):
+    def insert_fluc_msg(self, diff, old, new):
+        if   diff == 1 and new < old:
+            msg = str(new) + '(↓' + str(old - new) + ')'
+        elif diff == 1 and new > old:
+            msg = str(new) + '(↑' + str(new - old) + ')'
+        else:
+            msg = str(new)
+
+        return msg
+
+    def update_report(self, worksheet, diff):
         self.print_info('called: update_report')
         # worksheetが空の場合は全て0に設定して終了する
         if worksheet.is_empty():
@@ -105,9 +116,18 @@ class WidgetReport(Widget):
         # 学年ごとの更新
         for i, grade in enumerate(range(worksheet.GradeRange[0], worksheet.GradeRange[-1] + 1)):
             for key, count_func in mark_map.items():
-                count = count_func(grade)
-                getattr(self, f"{key}_value")[i].set(count)
-                total_counts[key] += count
+                value_str = getattr(self, f"{key}_value")[i].get()
+                match = re.match(r'^\d+', value_str)
+                if match:
+                    old = int(match.group())
+                else:
+                    old = 0
+                new = count_func(grade)
+
+                msg = self.insert_fluc_msg(diff, old, new)
+
+                getattr(self, f"{key}_value")[i].set(msg)
+                total_counts[key] += new
 
         # 合計欄（末尾）にセット
         last_index = len(self.setting_file.GRADES)  # '合計' のインデックス

@@ -267,18 +267,19 @@ class KanjiQuizMaker(Widget):
         or event_num == Widget.Event_SelectWorksheet \
         or event_num == Widget.Event_ChangeNumberOfProblem \
         or event_num == Widget.Event_Generate:
-            self.report.update_report(self.worksheet)
+            self.report.update_report(self.worksheet, diff = False)
             self.update_scoring()
 
         # 「採点完了」ボタンを押したとき
         if event_num == Widget.Event_OnScoringDone:
-            self.worksheet.update_worksheet(self.logfile, self.score.get_result_list())
+            result = self.worksheet.update_worksheet(self.logfile, self.score.get_result_list())
+            # 採点の繁栄が正解した場合
+            if result:
+                # ログファイルを削除する
+                self.logfile.delete_logfile(self.logfile.get_logfile_path())
 
-            # ログファイルを削除する
-            self.logfile.delete_logfile(self.logfile.get_logfile_path())
-
-            self.report.update_report(self.worksheet)
-            self.update_scoring()
+                self.report.update_report(self.worksheet, diff = True)
+                self.update_scoring()
 
     def update_scoring(self):
         # ログファイルが存在する場合、採点用のフィールドに答えと前回結果を入力する
