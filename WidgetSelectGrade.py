@@ -208,7 +208,7 @@ class WidgetSelectGrade(Widget):
                     self.kanji_check_vars[kanji].set(False)
 
             check_button = ctk.CTkButton(button_frame, text="全てチェックを入れる", command=check_all)
-            uncheck_button = ctk.CTkButton(button_frame, text="すべてチェックを外す", command=uncheck_all)
+            uncheck_button = ctk.CTkButton(button_frame, text="全てチェックを外す", command=uncheck_all)
 
             check_button.pack(side="left", padx=10)
             uncheck_button.pack(side="left", padx=10)
