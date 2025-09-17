@@ -1,3 +1,5 @@
+import os
+import json
 import customtkinter as ctk
 from Widget import Widget
 from WidgetAdvancedSettingPage import WidgetAdvancedSettingPage
@@ -101,9 +103,43 @@ class WidgetSelectGrade(Widget):
         # UIや状態の更新処理（ボタンの有効化など）
         self.status_callback(self.Event_CheckButton)
 
+    def save_kanji_check_state(self):
+        state = {}
+        for grade_index, kanji_list in enumerate(self.worksheet.kanji_by_grade_list[1:], start=1):
+            state[str(grade_index)] = {
+                kanji: self.kanji_check_vars[kanji].get()
+                for kanji in kanji_list if kanji in self.kanji_check_vars
+            }
+
+        try:
+            with open("kanji_check_state.json", "w", encoding="utf-8") as f:
+                json.dump(state, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            print(f"漢字チェック状態の保存エラー: {e}")
+
+    def restore_kanji_check_state(self):
+        if not os.path.exists("kanji_check_state.json"):
+            return
+
+        try:
+            with open("kanji_check_state.json", "r", encoding="utf-8") as f:
+                state = json.load(f)
+
+            for grade_index, kanji_list in enumerate(self.worksheet.kanji_by_grade_list[1:], start=1):
+                grade_key = str(grade_index)
+                if grade_key in state:
+                    for kanji in kanji_list:
+                        if kanji in state[grade_key]:
+                            self.kanji_check_vars[kanji].set(state[grade_key][kanji])
+        except Exception as e:
+            print(f"漢字チェック状態の復元エラー: {e}")
+
+    def close_advanced_window(self):
+        self.save_kanji_check_state()
+        self.advanced_window.withdraw()
+
     # イベント発生条件：「詳細設定」ボタンを選択したとき
     # 処理概要：新しいページを表示する
-
     def create_advanced_setting_page(self):
         self.advanced_window = ctk.CTkToplevel()
         self.advanced_window.withdraw()
@@ -141,13 +177,14 @@ class WidgetSelectGrade(Widget):
 
             kanji_list = self.worksheet.kanji_by_grade_list[i]
 
-            # 列数を計算（10行構成なので列数 = ceil(len / 10)）
+            # ✅ チェックボックス用グリッドフレーム
+            kanji_grid_frame = ctk.CTkFrame(tab_frame)
+            kanji_grid_frame.pack(fill="both", expand=True)
+
             max_col = len(kanji_list) // 10 + 1
             for col_index in range(max_col):
-                tab_frame.grid_columnconfigure(col_index, weight=1)  # ← 各列を均等に広げる
+                kanji_grid_frame.grid_columnconfigure(col_index, weight=1)
 
-            row = 0
-            col = 0
             for idx, kanji in enumerate(kanji_list):
                 row = idx % 10
                 col = idx // 10
@@ -155,12 +192,12 @@ class WidgetSelectGrade(Widget):
                 var = ctk.BooleanVar(value=False)
                 self.kanji_check_vars[kanji] = var
 
-                checkbox = ctk.CTkCheckBox(tab_frame, text=kanji, variable=var, width=60) #, width=40, font=("Arial", 14))
+                checkbox = ctk.CTkCheckBox(kanji_grid_frame, text=kanji, variable=var, width=60)
                 checkbox.grid(row=row, column=col, padx=2, pady=2, sticky="")
 
-            # 一括操作ボタン（gridで配置）
+            # ✅ 一括操作ボタン用フレーム
             button_frame = ctk.CTkFrame(tab_frame)
-            button_frame.grid(row=row+1, column=0, columnspan=col+1, pady=(0, 10))
+            button_frame.pack(pady=(0, 10))
 
             def check_all(kanji_list=kanji_list):
                 for kanji in kanji_list:
@@ -173,15 +210,16 @@ class WidgetSelectGrade(Widget):
             check_button = ctk.CTkButton(button_frame, text="全てチェックを入れる", command=check_all)
             uncheck_button = ctk.CTkButton(button_frame, text="すべてチェックを外す", command=uncheck_all)
 
-            check_button.grid(row=0, column=0, padx=10)
-            uncheck_button.grid(row=0, column=1, padx=10)
+            check_button.pack(side="left", padx=10)
+            uncheck_button.pack(side="left", padx=10)
 
         # 閉じるボタン
-        close_button = ctk.CTkButton(self.advanced_window, text="閉じる", command=self.advanced_window.withdraw)
+        close_button = ctk.CTkButton(self.advanced_window, text="閉じる", command=self.close_advanced_window)
         close_button.pack(pady=10)
 
         # 描画キューを消化してちらつき防止
         self.advanced_window.update_idletasks()
+        self.restore_kanji_check_state()
 
     # イベント発生条件：「出題反映選択」チェックボックスを選択したとき
     # 処理概要：チェックボックスの値が変化したとき、設定を反映する
