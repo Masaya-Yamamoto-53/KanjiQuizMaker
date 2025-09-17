@@ -199,6 +199,7 @@ class KanjiQuizMaker(Widget):
         or event_num == Widget.Event_SelectWorksheet:
             # 問題集を変更したとき、問題集を読み込む
             self.worksheet.load_worksheet(self.select_worksheet.get_worksheet_path())
+            self.select_grade.set_worksheet(self.worksheet)
 
         # 問題集を作成する設定がすべて完了している
         if self.worksheet.is_worksheet_loaded(self.select_worksheet.get_worksheet_path()) \

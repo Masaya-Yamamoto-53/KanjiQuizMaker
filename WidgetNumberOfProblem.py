@@ -27,13 +27,13 @@ class WidgetNumberOfProblem(Widget):
         )
         self.number_of_problem_entry.bind('<FocusOut>', self.event_change_number_of_problem)
 
-    # 出題数を取得（文字列を整数に変換、失敗時は0を返す）
+    # 出題数を取得（文字列を整数に変換、失敗時は20を返す）
     def get_number_of_problem(self):
         num = self.number_of_problem.get()
         try:
             return int(num)
         except (ValueError, TypeError):
-            return 0
+            return self.setting_file.DEFAULT_NUMBER
 
     # 出題数を設定（整数を文字列に変換して反映）
     def set_number_of_problem(self, num):
