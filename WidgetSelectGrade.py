@@ -134,6 +134,22 @@ class WidgetSelectGrade(Widget):
         except Exception as e:
             print(f"漢字チェック状態の復元エラー: {e}")
 
+    def get_checked_kanji(self):
+        """
+        詳細設定ページでチェックされた漢字を学年ごとに返す。
+        返り値形式: { 1: ["日", "月", ...], 2: [...], ... }
+        """
+        checked_kanji_by_grade = {}
+
+        for grade_index, kanji_list in enumerate(self.worksheet.kanji_by_grade_list[1:], start=1):
+            checked_list = [
+                kanji for kanji in kanji_list
+                if kanji in self.kanji_check_vars and self.kanji_check_vars[kanji].get()
+            ]
+            checked_kanji_by_grade[grade_index] = checked_list  # ← 数値キーに変更
+
+        return checked_kanji_by_grade
+
     def close_advanced_window(self):
         self.save_kanji_check_state()
         self.advanced_window.withdraw()

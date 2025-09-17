@@ -221,6 +221,7 @@ class KanjiQuizMaker(Widget):
                 quiz = self.generate_quiz.create(
                       self.kanji_file_path                            # 保存先ファイルパス
                     , self.worksheet                                  # ワークシート情報
+                    , self.select_grade.get_checked_kanji()           # 出題可能な漢字
                     , self.number_of_problem.get_number_of_problem()  # 出題数
                     , self.select_grade.get_grade_list()              # 対象学年のインデックスリスト
                     , self.select_student.get_student_name()          # 生徒名

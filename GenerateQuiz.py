@@ -23,7 +23,7 @@ class GenerateQuiz(LoggerMixin):
 
         self.create_date = None  # 作成日
 
-    def create(self, path, worksheet, num, grades, student_name):
+    def create(self, path, worksheet, kanji_list, num, grades, student_name):
         # 作成日を取得する
         self.create_date = pd.to_datetime(datetime.datetime.today())
 
@@ -39,7 +39,7 @@ class GenerateQuiz(LoggerMixin):
                 num = num_i
 
         # 問題集を作成する
-        raw_quiz = self.create_train_mode(worksheet, num, grades)
+        raw_quiz = self.create_train_mode(worksheet, kanji_list, num, grades)
         # 問題の答えに含まれている関数を取得する
         answer_list = self.get_answer_kanji_keyword(raw_quiz, worksheet)
         # 問題文に答えが記載されている場合は、その漢字をルビに置き換える
@@ -47,6 +47,8 @@ class GenerateQuiz(LoggerMixin):
         # 選択中の学年未満のルビを削除する
         quiz = self.remove_unnecessary_ruby(quiz, worksheet, grades)
         # PDFを作成する
+        num = len(quiz)
+        print(quiz[worksheet.Problem])
         self.output_quiz.create(path, student_name, self.create_date, num, quiz[worksheet.Problem])
 
         return raw_quiz
@@ -136,16 +138,20 @@ class GenerateQuiz(LoggerMixin):
 
         return new_quiz
 
-    def create_train_mode(self, worksheet, num, grade):
-        # テスト問題を選定する
+    def create_train_mode(self, worksheet, kanji_list, num, grade):
+        # 選択した学年の問題のみ抽出する
+        grade_filtered = worksheet.filter_by_grade(worksheet, grade)
+        # 出題対象の漢字のみにする
+        kanji_filtered = worksheet.filter_by_checked_kanji(grade_filtered, grade, kanji_list)
         # 間違えた問題のインデックスを取得
-        self.list_x = worksheet.get_quiz(worksheet.IncrctMk, grade, self.create_date, shuffle = True, days = 0)
+        self.list_x = worksheet.get_quiz(kanji_filtered, worksheet.IncrctMk, grade, self.create_date, shuffle = True, days = 0)
+        print(self.list_x)
         # 昨日間違えた問題のインデックスを取得する
-        self.list_d = worksheet.get_quiz(worksheet.DayMk, grade, self.create_date, shuffle = True, days = 1)
+        self.list_d = worksheet.get_quiz(kanji_filtered, worksheet.DayMk, grade, self.create_date, shuffle = True, days = 1)
         # 一週間前に間違えた問題のインデックスを取得する
-        self.list_w = worksheet.get_quiz(worksheet.WeekMk, grade, self.create_date, shuffle = True, days = 7 - 1)
+        self.list_w = worksheet.get_quiz(kanji_filtered, worksheet.WeekMk, grade, self.create_date, shuffle = True, days = 7 - 1)
         # 一ヶ月前に間違えた問題のインデックスを取得する
-        self.list_m = worksheet.get_quiz(worksheet.MonthMk, grade, self.create_date, shuffle = True, days = 7 * 3)
+        self.list_m = worksheet.get_quiz(kanji_filtered, worksheet.MonthMk, grade, self.create_date, shuffle = True, days = 7 * 3)
 
         # 問題を連結する
         # 優先順位：
@@ -166,14 +172,14 @@ class GenerateQuiz(LoggerMixin):
         else:
             # 間違えた問題だけでは不足している場合
             # まだ出題していない問題を抽出する
-            self.list_n = worksheet.get_quiz(worksheet.NotMk, grade, self.create_date, shuffle = True)
+            self.list_n = worksheet.get_quiz(kanji_filtered, worksheet.NotMk, grade, self.create_date, shuffle = True)
             quiz = pd.concat([quiz, self.list_n], ignore_index=True)
 
             num_t = num_t - len(self.list_n[0:num])
             if num_t > 0:
                 # 未出題の問題だけでは確保できなかった場合
                 # 既に出題し、正解している問題を候補にする
-                self.list_o = worksheet.get_quiz(worksheet.CrctMk, grade, self.create_date, shuffle = True)
+                self.list_o = worksheet.get_quiz(kanji_filtered, worksheet.CrctMk, grade, self.create_date, shuffle = True)
                 quiz = pd.concat([quiz, self.list_o], ignore_index=True)
 
         # 出題をnum数にする

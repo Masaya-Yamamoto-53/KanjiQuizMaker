@@ -212,20 +212,38 @@ class Worksheet(LoggerMixin):
             # 学年と結果の両方が指定された場合
             return int(((df[self.Grade] == grade) & (df[self.Result] == result)).sum())
 
+    def filter_by_grade(self, worksheet, grade_list):
+        """
+        指定された学年リストに該当する行のみを抽出する。
+        :param grade_list: [1, 2, 3] のような学年の整数リスト
+        :return: 該当する DataFrame の部分集合
+        """
+        return worksheet.worksheet[worksheet.worksheet[self.Grade].isin(grade_list)]
+
+    def filter_by_checked_kanji(self, worksheet, grade, kanji_list):
+        if isinstance(grade, (list, tuple)):
+            grade = grade[0]
+
+        checked_kanji = kanji_list.get(grade, [])
+        checked_kanji_set = set(checked_kanji)
+
+        def contains_only_checked_kanji(word):
+            return all(char in checked_kanji_set for char in str(word))
+
+        filtered = worksheet[worksheet[self.Answer].apply(contains_only_checked_kanji)]
+        return filtered
+
     # 条件に該当する問題集のインデックスを返す
-    def get_quiz(self, result, grade, create_date, shuffle = False, days = -1):
+    def get_quiz(self, worksheet, result, grade, create_date, shuffle = False, days = -1):
         # 毎日同じ時間帯に学習する場合、前日に間違えた問題が抽出されない可能性があるため、
         # 判定時間に2時間のオフセットを加える。
         now_time = create_date + datetime.timedelta(hours = 6)
 
-        # Grade条件でフィルタ
-        grade_filtered = self.worksheet[self.worksheet[self.Grade].isin(grade)]
-
         # Result条件でフィルタ
         if result is np.nan:
-            grade_filtered = grade_filtered[grade_filtered[self.Result].isna()]
+            grade_filtered = worksheet[worksheet[self.Result].isna()]
         else:
-            grade_filtered = grade_filtered[grade_filtered[self.Result] == result]
+            grade_filtered = worksheet[worksheet[self.Result] == result]
             if days != -1:
                 delta = datetime.timedelta(days=days) < (now_time - pd.to_datetime(
                                                                          grade_filtered[self.LastUpdate]
