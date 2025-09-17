@@ -108,10 +108,6 @@ class WidgetSelectGrade(Widget):
         self.advanced_window = ctk.CTkToplevel()
         self.advanced_window.withdraw()
         self.advanced_window.title("詳細設定")
-        #self.advanced_window.geometry("700x500")
-
-        #self.advanced_window.attributes("-topmost", True)
-        #self.advanced_window.lift()
 
         # タイトル・説明
         label = ctk.CTkLabel(self.advanced_window, text="詳細設定ページ", font=("Arial", 16))
@@ -150,6 +146,8 @@ class WidgetSelectGrade(Widget):
             for col_index in range(max_col):
                 tab_frame.grid_columnconfigure(col_index, weight=1)  # ← 各列を均等に広げる
 
+            row = 0
+            col = 0
             for idx, kanji in enumerate(kanji_list):
                 row = idx % 10
                 col = idx // 10
@@ -158,11 +156,32 @@ class WidgetSelectGrade(Widget):
                 self.kanji_check_vars[kanji] = var
 
                 checkbox = ctk.CTkCheckBox(tab_frame, text=kanji, variable=var, width=60) #, width=40, font=("Arial", 14))
-                checkbox.grid(row=row, column=col, padx=2, pady=2, sticky="nsew")
+                checkbox.grid(row=row, column=col, padx=2, pady=2, sticky="")
+
+            # 一括操作ボタン（gridで配置）
+            button_frame = ctk.CTkFrame(tab_frame)
+            button_frame.grid(row=row+1, column=0, columnspan=col+1, pady=(0, 10))
+
+            def check_all(kanji_list=kanji_list):
+                for kanji in kanji_list:
+                    self.kanji_check_vars[kanji].set(True)
+
+            def uncheck_all(kanji_list=kanji_list):
+                for kanji in kanji_list:
+                    self.kanji_check_vars[kanji].set(False)
+
+            check_button = ctk.CTkButton(button_frame, text="全てチェックを入れる", command=check_all)
+            uncheck_button = ctk.CTkButton(button_frame, text="すべてチェックを外す", command=uncheck_all)
+
+            check_button.grid(row=0, column=0, padx=10)
+            uncheck_button.grid(row=0, column=1, padx=10)
 
         # 閉じるボタン
         close_button = ctk.CTkButton(self.advanced_window, text="閉じる", command=self.advanced_window.withdraw)
         close_button.pack(pady=10)
+
+        # 描画キューを消化してちらつき防止
+        self.advanced_window.update_idletasks()
 
     # イベント発生条件：「出題反映選択」チェックボックスを選択したとき
     # 処理概要：チェックボックスの値が変化したとき、設定を反映する
