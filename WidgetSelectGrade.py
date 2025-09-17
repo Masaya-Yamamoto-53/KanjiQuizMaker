@@ -17,6 +17,7 @@ class WidgetSelectGrade(Widget):
 
     def set_worksheet(self, worksheet):
         self.worksheet = worksheet
+        self.create_advanced_setting_page()
 
     def create(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
@@ -102,35 +103,33 @@ class WidgetSelectGrade(Widget):
 
     # イベント発生条件：「詳細設定」ボタンを選択したとき
     # 処理概要：新しいページを表示する
-    def event_advanced_setting(self):
-        win = ctk.CTkToplevel()
-        win.title("詳細設定")
-        #win.geometry("500x400")  # 少し広めに調整
 
-        # 最前面に表示するための処理
-        win.attributes("-topmost", True)
-        win.lift()
-        win.focus_force()
+    def create_advanced_setting_page(self):
+        self.advanced_window = ctk.CTkToplevel()
+        self.advanced_window.withdraw()
+        self.advanced_window.title("詳細設定")
+        #self.advanced_window.geometry("700x500")
 
-        # タイトルラベル
-        label = ctk.CTkLabel(win, text="詳細設定ページ", font=("Arial", 16))
+        #self.advanced_window.attributes("-topmost", True)
+        #self.advanced_window.lift()
+
+        # タイトル・説明
+        label = ctk.CTkLabel(self.advanced_window, text="詳細設定ページ", font=("Arial", 16))
         label.pack(pady=10)
 
-        # 説明文ラベル（追加）
         description = (
-            "この画面では、各学年の漢字を一文字ずつチェックボックスで選択できます。\n"
+            "各学年の漢字を一文字ずつチェックボックスで選択できます。\n"
             "チェックされた漢字だけが出題対象になります。"
         )
-        description_label = ctk.CTkLabel(win, text=description, font=("Arial", 12), justify="left")
+        description_label = ctk.CTkLabel(self.advanced_window, text=description, font=("Arial", 12), justify="left")
         description_label.pack(pady=(0, 10))
 
-        # タブビューの追加
-        tabview = ctk.CTkTabview(win)
-        tabview.pack(expand=True, fill="both", padx=20, pady=10)
+        # タブビュー
+        self.advanced_tabview = ctk.CTkTabview(self.advanced_window)
+        self.advanced_tabview.pack(expand=True, fill="both", padx=20, pady=10)
 
         self.kanji_check_vars = {}
 
-        # 学年タブの追加
         grade_titles = [
             "一年生の漢字",
             "二年生の漢字",
@@ -140,34 +139,61 @@ class WidgetSelectGrade(Widget):
             "六年生の漢字"
         ]
 
-        print(self.worksheet.kanji_by_grade_list)
-
-        for i, grade_title in enumerate(grade_titles, start = 1):
-            tabview.add(grade_title)
-            tab_frame = tabview.tab(grade_title)
+        for i, grade_title in enumerate(grade_titles, start=1):
+            self.advanced_tabview.add(grade_title)
+            tab_frame = self.advanced_tabview.tab(grade_title)
 
             kanji_list = self.worksheet.kanji_by_grade_list[i]
 
+            # 列数を計算（10行構成なので列数 = ceil(len / 10)）
+            max_col = len(kanji_list) // 10 + 1
+            for col_index in range(max_col):
+                tab_frame.grid_columnconfigure(col_index, weight=1)  # ← 各列を均等に広げる
+
             for idx, kanji in enumerate(kanji_list):
-                row = idx // 10  # 10文字ごとに改行
-                col = idx % 10  # 横に並べる
+                row = idx % 10
+                col = idx // 10
 
                 var = ctk.BooleanVar(value=False)
                 self.kanji_check_vars[kanji] = var
 
-                checkbox = ctk.CTkCheckBox(
-                    tab_frame,
-                    text=kanji,
-                    variable=var
-                )
-                checkbox.grid(row=row, column=col, padx=5, pady=5, sticky="w")
+                checkbox = ctk.CTkCheckBox(tab_frame, text=kanji, variable=var, width=60) #, width=40, font=("Arial", 14))
+                checkbox.grid(row=row, column=col, padx=2, pady=2, sticky="nsew")
 
-        close_button = ctk.CTkButton(win, text="閉じる", command=win.destroy)
+        # 閉じるボタン
+        close_button = ctk.CTkButton(self.advanced_window, text="閉じる", command=self.advanced_window.withdraw)
         close_button.pack(pady=10)
 
+    # イベント発生条件：「出題反映選択」チェックボックスを選択したとき
+    # 処理概要：チェックボックスの値が変化したとき、設定を反映する
+    def event_check_button(self):
+        # 設定ファイルに定義された学年ごとにチェック状態を取得・保存
+        for key in self.setting_file.GRADES:
+            # 該当学年のチェック状態を取得（True/False）
+            checked = self.get_grade(key)
+            # 生徒名と学年に対応する設定を保存
+            self.setting_file.set_grade(self.select_student.get_student_name(), key, checked)
 
+        # UIや状態の更新処理（ボタンの有効化など）
+        self.status_callback(self.Event_CheckButton)
 
+    # イベント発生条件：「詳細設定」ボタンを選択したとき
+    # 処理概要：新しいページを表示する
+    def event_advanced_setting(self, grade_index=1):
+        self.advanced_window.deiconify()  # ← 表示
+        self.advanced_window.focus_force()  # ← フォーカスを当てる
+        self.advanced_window.lift()  # ← 最前面に持ち上げる（ここで使う）
 
+        self.advanced_window.protocol("WM_DELETE_WINDOW", self.advanced_window.withdraw)
 
-
-
+        # 指定タブに切り替え（例：1年生なら index=1）
+        grade_titles = [
+            "一年生の漢字",
+            "二年生の漢字",
+            "三年生の漢字",
+            "四年生の漢字",
+            "五年生の漢字",
+            "六年生の漢字"
+        ]
+        selected_tab = grade_titles[grade_index - 1]
+        self.advanced_tabview.set(selected_tab)
