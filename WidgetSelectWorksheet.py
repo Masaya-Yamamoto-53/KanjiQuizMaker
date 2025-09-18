@@ -9,12 +9,11 @@ class WidgetSelectWorksheet(Widget):
         self.setting_file = setting_file
         self.select_student = select_student
         self.status_callback = status_callback
-
         self.path_of_worksheet = ctk.StringVar()
         self.select_worksheet_button = None
 
     # 問題集選択
-    def create(self, frame, row, column):
+    def build_ui(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
         self.create_label(frame, 0, 0, u'問題集選択')
         self.create_entry(
@@ -34,17 +33,14 @@ class WidgetSelectWorksheet(Widget):
         )
 
     # 問題集のファイルパスを取得
-    def get_worksheet_path(self):
+    def get_path_of_worksheet_from_ui(self):
         return self.path_of_worksheet.get()
 
     # 問題集のファイルパスを設定
-    def set_worksheet_path(self, path):
+    def set_path_of_worksheet_from_ui(self, path):
         self.path_of_worksheet.set(path)
 
-    def update_worksheet_path(self):
-        self.path_of_worksheet.set(self.setting_file.get_worksheet_path(self.select_student.get_student_name()))
-
-    def set_button_state(self, state):
+    def set_select_worksheet_button_state(self, state):
         self.select_worksheet_button.configure(state = state)
 
     # イベント発生条件：「選択」ボタンを押したとき
@@ -52,9 +48,9 @@ class WidgetSelectWorksheet(Widget):
     def event_select_worksheet(self):
         # CSVファイルを選択
         path = filedialog.askopenfilename(
-              title = '問題集CSVを選択'
-            , filetypes = [('CSVファイル', '*.csv')]
-            , initialdir = os.path.abspath(os.path.dirname(__file__))
+              title=u'問題集CSVを選択'
+            , filetypes=[(u'CSVファイル', u'*.csv')]
+            , initialdir=os.path.abspath(os.path.dirname(__file__))
         )
         # キャンセル時は何もしない
         if not path:
@@ -62,9 +58,11 @@ class WidgetSelectWorksheet(Widget):
 
         # 設定ファイルに相対パスを登録する
         path = os.path.relpath(path)
-        self.setting_file.set_worksheet_path(self.select_student.get_student_name(), path)
+        self.setting_file.set_path_of_worksheet_from_ui(
+              self.select_student.get_student_name_from_ui()
+            , path
+        )
         # エントリーにパス名を表示
-        self.set_worksheet_path(path)
-
+        self.set_path_of_worksheet_from_ui(path)
         # UIや状態の更新処理（ボタンの有効化など）
         self.status_callback(self.Event_SelectWorksheet)

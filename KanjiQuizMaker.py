@@ -68,21 +68,21 @@ class KanjiQuizMaker(Widget):
     ################################################################################
     def widget_register_student(self, frame, row, column):
         self.register_student = WidgetRegisterStudent(self.setting_file, self.status_callback)
-        self.register_student.create(frame, row, column)
+        self.register_student.build_ui(frame, row, column)
 
     ################################################################################
     # 生徒選択
     ################################################################################
     def widget_select_student(self, frame, row, column):
         self.select_student = WidgetSelectStudent(self.setting_file, self.status_callback)
-        self.select_student.create(frame, row, column)
+        self.select_student.build_ui(frame, row, column)
 
     ################################################################################
     # 問題集選択
     ################################################################################
     def widget_select_worksheet(self, frame, row, column):
         self.select_worksheet = WidgetSelectWorksheet(self.setting_file, self.select_student, self.status_callback)
-        self.select_worksheet.create(frame, row, column)
+        self.select_worksheet.build_ui(frame, row, column)
 
     ################################################################################
     # 出題範囲選択 & 出題数
@@ -91,7 +91,7 @@ class KanjiQuizMaker(Widget):
         frame = self.create_frame(frame, row, column, None)
 
         self.select_grade = WidgetSelectGrade(self.setting_file, self.select_student, self.status_callback)
-        self.select_grade.create(frame, 0, 0)
+        self.select_grade.build_ui(frame, 0, 0)
 
         self.number_of_problem = WidgetNumberOfProblem(self.setting_file, self.select_student, self.status_callback)
         self.number_of_problem.create(frame, 0, 1)
@@ -152,25 +152,27 @@ class KanjiQuizMaker(Widget):
         if event_num == Widget.Event_RegisterStudent \
         or event_num == Widget.Event_DeleteStudent:
             # 生徒を登録または、削除したとき、「生徒選択」コンボボックスを更新する
-            self.select_student.set_combobox(self.setting_file.get_student_list())
+            self.select_student.set_student_name_from_ui(self.setting_file.get_student_list())
 
         if event_num == Widget.Event_SelectStudent \
         or event_num == Widget.Event_DeleteStudent:
             # 生徒を変更したとき（生徒選択または、削除したとき）
-            student_name = self.select_student.get_student_name()
+            student_name = self.select_student.get_student_name_from_ui()
             if len(student_name) > 0:
                 state = ctk.NORMAL
             else:
                 state = ctk.DISABLED
 
             # 「削除」ボタンを有効/無効化
-            self.select_student.set_button_state(state)
+            self.select_student.set_delete_student_button_state(state)
             # 「問題集選択」ボタンの有効/無効化
-            self.select_worksheet.set_button_state(state)
+            self.select_worksheet.set_select_worksheet_button_state(state)
 
             if state == ctk.NORMAL:
                 # 「問題集選択」エントリーにパスを表示する
-                self.select_worksheet.update_worksheet_path()
+                self.select_worksheet.set_path_of_worksheet_from_ui(
+                    self.setting_file.get_worksheet_path(student_name)
+                )
                 # 「出題範囲選択」のチェックボタンの有効化とチェックボタンの更新
                 self.select_grade.enable_grade()
                 # 「出題数」のエントリーを有効化
@@ -180,7 +182,7 @@ class KanjiQuizMaker(Widget):
                 )
             else:
                 # 「問題集選択」エントリーを空白にする
-                self.select_worksheet.set_worksheet_path('')
+                self.select_worksheet.set_path_of_worksheet_from_ui('')
                 # 「出題範囲選択」のチェックボタンの無効化
                 self.select_grade.disable_grade()
                 # 「出題数」のエントリーを無効化
@@ -188,7 +190,7 @@ class KanjiQuizMaker(Widget):
                 self.number_of_problem.set_number_of_problem('')
 
             # 生徒名を取得し、スペースをアンダーバーに置換
-            safe_name = self.select_student.get_student_name().replace(' ', '_').replace('　', '_')
+            safe_name = self.select_student.get_student_name_from_ui().replace(' ', '_').replace('　', '_')
             # 漢字プリントのパスを作成
             self.kanji_file_path = './' + safe_name + '.pdf'
             # ログファイルのパスを作成
@@ -198,11 +200,11 @@ class KanjiQuizMaker(Widget):
         or event_num == Widget.Event_DeleteStudent \
         or event_num == Widget.Event_SelectWorksheet:
             # 問題集を変更したとき、問題集を読み込む
-            self.worksheet.load_worksheet(self.select_worksheet.get_worksheet_path())
+            self.worksheet.load_worksheet(self.select_worksheet.get_path_of_worksheet_from_ui())
             self.select_grade.set_worksheet(self.worksheet)
 
         # 問題集を作成する設定がすべて完了している
-        if self.worksheet.is_worksheet_loaded(self.select_worksheet.get_worksheet_path()) \
+        if self.worksheet.is_worksheet_loaded(self.select_worksheet.get_path_of_worksheet_from_ui()) \
         and len(self.select_grade.get_grade_list()) > 0:
                 # 「プリント作成」のエントリーを有効/無効化
             self.print.set_generate_button_state(ctk.NORMAL)
@@ -224,11 +226,10 @@ class KanjiQuizMaker(Widget):
                     , self.select_grade.get_checked_kanji()           # 出題可能な漢字
                     , self.number_of_problem.get_number_of_problem()  # 出題数
                     , self.select_grade.get_grade_list()              # 対象学年のインデックスリスト
-                    , self.select_student.get_student_name()          # 生徒名
+                    , self.select_student.get_student_name_from_ui()          # 生徒名
                 )
                 # ログファイルを作成
-                self.logfile.set_logfile(quiz)
-                self.logfile.create_logfile(self.log_file_path)
+                self.logfile.save_logfile(self.log_file_path, quiz)
 
                 # 作成完了メッセージを表示
                 msgbox.showinfo('Info', u'漢字プリントの作成が完了しました')
@@ -269,7 +270,7 @@ class KanjiQuizMaker(Widget):
         or event_num == Widget.Event_SelectWorksheet \
         or event_num == Widget.Event_ChangeNumberOfProblem \
         or event_num == Widget.Event_Generate:
-            self.report.update_report(self.worksheet, diff = False)
+            self.report.update_report(self.worksheet, diff=False)
             self.update_scoring()
 
         # 「採点完了」ボタンを押したとき
@@ -280,7 +281,7 @@ class KanjiQuizMaker(Widget):
                 # ログファイルを削除する
                 self.logfile.delete_logfile(self.logfile.get_logfile_path())
 
-                self.report.update_report(self.worksheet, diff = True)
+                self.report.update_report(self.worksheet, diff=True)
                 self.update_scoring()
 
     def update_scoring(self):
@@ -303,10 +304,8 @@ class KanjiQuizMaker(Widget):
             self.score.set_scoring_result([])
 
     def init_status(self):
-        # 「登録」ボタンを有効化
-        self.register_student.set_button_state(ctk.NORMAL)
-        # 既に生徒を選択している場合
-        if len(self.select_student.get_student_name()) > 0:
+        # 既に生徒を選択しているとき
+        if len(self.select_student.get_student_name_from_ui()) > 0:
             # UIや状態の更新処理（ボタンの有効化など）
             self.status_callback(Widget.Event_SelectStudent)
 

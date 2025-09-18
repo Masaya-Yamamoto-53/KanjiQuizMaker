@@ -57,7 +57,7 @@ class WidgetNumberOfProblem(Widget):
 
         # 設定ファイルに出題数を保存（生徒名と紐付け）
         self.setting_file.set_number_of_problem(
-              self.select_student.get_student_name()
+              self.select_student.get_student_name_from_ui()
             , num
         )
 

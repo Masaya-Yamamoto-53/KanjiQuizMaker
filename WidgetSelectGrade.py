@@ -21,7 +21,7 @@ class WidgetSelectGrade(Widget):
         self.worksheet = worksheet
         self.create_advanced_setting_page()
 
-    def create(self, frame, row, column):
+    def build_ui(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
         self.create_label(frame, 0, 0, u'出題範囲選択')
 
@@ -55,7 +55,7 @@ class WidgetSelectGrade(Widget):
         grade_list = []
         i = 1  # 学年のインデックス（1始まり）
         for key in self.setting_file.GRADES:
-            checked = self.get_grade(key)  # 該当学年が選択されているかを取得
+            checked = self.get_grade_from_ui(key)  # 該当学年が選択されているかを取得
             if checked:
                 grade_list.append(i)  # 選択されていればインデックスを追加
 
@@ -63,25 +63,25 @@ class WidgetSelectGrade(Widget):
 
         return grade_list
 
-    def get_grade(self, key):
+    def get_grade_from_ui(self, key):
         return self.grade_check_button_value[key].get()
 
     # 指定された学年のチェック状態を設定
-    def set_grade(self, key, checked):
+    def set_grade_from_ui(self, key, checked):
         self.grade_check_button_value[key].set(checked)
 
     def enable_grade(self):
         # 「出題範囲選択」のチェックボタンの有効化とチェックボタンの更新
-        grade_list = self.setting_file.get_grade_list(self.select_student.get_student_name())
+        grade_list = self.setting_file.get_grade_list(self.select_student.get_student_name_from_ui())
         for key, checked in zip(self.setting_file.GRADES, grade_list):
             self.set_checkbox_state(key, ctk.NORMAL)
-            self.set_grade(key, checked)
+            self.set_grade_from_ui(key, checked)
         self.set_advanced_button_state(ctk.NORMAL)
 
     def disable_grade(self):
         for key in self.setting_file.GRADES:
             self.set_checkbox_state(key, ctk.DISABLED)
-            self.set_grade(key, False)
+            self.set_grade_from_ui(key, False)
         self.set_advanced_button_state(ctk.DISABLED)
 
     def set_checkbox_state(self, key, state):
@@ -96,9 +96,9 @@ class WidgetSelectGrade(Widget):
         # 設定ファイルに定義された学年ごとにチェック状態を取得・保存
         for key in self.setting_file.GRADES:
             # 該当学年のチェック状態を取得（True/False）
-            checked = self.get_grade(key)
+            checked = self.get_grade_from_ui(key)
             # 生徒名と学年に対応する設定を保存
-            self.setting_file.set_grade(self.select_student.get_student_name(), key, checked)
+            self.setting_file.set_grade_from_ui(self.select_student.get_student_name_from_ui(), key, checked)
 
         # UIや状態の更新処理（ボタンの有効化など）
         self.status_callback(self.Event_CheckButton)
@@ -193,7 +193,7 @@ class WidgetSelectGrade(Widget):
 
             kanji_list = self.worksheet.kanji_by_grade_list[i]
 
-            # ✅ チェックボックス用グリッドフレーム
+            # チェックボックス用グリッドフレーム
             kanji_grid_frame = ctk.CTkFrame(tab_frame)
             kanji_grid_frame.pack(fill="both", expand=True)
 
@@ -209,7 +209,7 @@ class WidgetSelectGrade(Widget):
                 self.kanji_check_vars[kanji] = var
 
                 checkbox = ctk.CTkCheckBox(kanji_grid_frame, text=kanji, variable=var, width=60)
-                checkbox.grid(row=row, column=col, padx=2, pady=2, sticky="")
+                checkbox.grid(row=row, column=col, padx=2, pady=2, sticky='')
 
             # ✅ 一括操作ボタン用フレーム
             button_frame = ctk.CTkFrame(tab_frame)
@@ -223,8 +223,8 @@ class WidgetSelectGrade(Widget):
                 for kanji in kanji_list:
                     self.kanji_check_vars[kanji].set(False)
 
-            check_button = ctk.CTkButton(button_frame, text="全てチェックを入れる", command=check_all)
-            uncheck_button = ctk.CTkButton(button_frame, text="全てチェックを外す", command=uncheck_all)
+            check_button = ctk.CTkButton(button_frame, text=u'全てチェックを入れる', command=check_all)
+            uncheck_button = ctk.CTkButton(button_frame, text='全てチェックを外す', command=uncheck_all)
 
             check_button.pack(side="left", padx=10)
             uncheck_button.pack(side="left", padx=10)
@@ -243,9 +243,9 @@ class WidgetSelectGrade(Widget):
         # 設定ファイルに定義された学年ごとにチェック状態を取得・保存
         for key in self.setting_file.GRADES:
             # 該当学年のチェック状態を取得（True/False）
-            checked = self.get_grade(key)
+            checked = self.get_grade_from_ui(key)
             # 生徒名と学年に対応する設定を保存
-            self.setting_file.set_grade(self.select_student.get_student_name(), key, checked)
+            self.setting_file.set_grade_from_ui(self.select_student.get_student_name_from_ui(), key, checked)
 
         # UIや状態の更新処理（ボタンの有効化など）
         self.status_callback(self.Event_CheckButton)

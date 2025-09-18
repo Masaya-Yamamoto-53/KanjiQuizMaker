@@ -364,8 +364,7 @@ class OutputQuiz:
                             self._draw_frame(self.problem_text_frame[idx] - self.rect_size / 3, y_pos, self.rect_size, 0, arr)
                             frame_num += 1
                         else:
-                            self._draw_frame(self.problem_text_frame[idx] - self.rect_size / 3, y_pos, self.rect_size, frame_num,
-                                            arr)
+                            self._draw_frame(self.problem_text_frame[idx] - self.rect_size / 3, y_pos, self.rect_size, frame_num, arr)
                             frame_num = 0
                     frame_stt = kFrameSttEnd
                     arr = []

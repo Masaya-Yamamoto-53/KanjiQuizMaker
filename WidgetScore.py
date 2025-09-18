@@ -24,6 +24,9 @@ class WidgetScore(Widget):
 
         self.result_list = [] # 採点結果
 
+        self.scoring_answer_texts = {}
+        self.scoring_answer_buttons = {}
+
     # 採点
     def create(self, frame, row, column):
         self.create_label(frame, 0, 0, u'採点')
@@ -31,9 +34,6 @@ class WidgetScore(Widget):
         top_frame = self.create_frame(frame, 1, 0, None)
         btm_frame = self.create_frame(frame, 2, 0, None)
         menu_frame = self.create_frame(frame, 3, 0, None)
-
-        self.scoring_answer_texts = {}
-        self.scoring_answer_buttons = {}
 
         self.create_scoring_widgets(top_frame, self.keys[:10])
         self.create_scoring_widgets(btm_frame, self.keys[10:])
@@ -58,8 +58,8 @@ class WidgetScore(Widget):
             col = 9 - i
 
             # ラベル
-            label = ctk.CTkLabel(parent_frame, text = key, width = 30, font = ('Yu Gothic', 18))
-            label.grid(row = 0, column = col, padx = 2, pady = 2)
+            label = ctk.CTkLabel(parent_frame, text=key, width=30, font=('Yu Gothic', 18))
+            label.grid(row=0, column=col, padx=2, pady=2)
 
             # 縦書き風ラベル群
             label_frame = ctk.CTkFrame(parent_frame, width=40)
@@ -74,23 +74,23 @@ class WidgetScore(Widget):
             # ボタン
             button = ctk.CTkButton(
                   parent_frame
-                , text = '―'
-                , width = 40
-                , font = ('Yu Gothic', 14)
-                , command = lambda k=key: self.event_on_scoring_button_click(k)
-                , state = ctk.DISABLED
+                , text='―'
+                , width=40
+                , font=('Yu Gothic', 14)
+                , command=lambda k=key: self.event_on_scoring_button_click(k)
+                , state=ctk.DISABLED
             )
-            button.grid(row = 2, column = col, padx = 2, pady = (0, 5))
+            button.grid(row=2, column=col, padx=2, pady=(0, 5))
             self.scoring_answer_buttons[key] = button
 
     def set_all_correct_button_state(self, state):
-        self.button_all_correct.configure(state = state)
+        self.button_all_correct.configure(state=state)
 
     def set_all_incorrect_button_state(self, state):
-        self.button_all_incorrect.configure(state = state)
+        self.button_all_incorrect.configure(state=state)
 
     def set_done_button_state(self, state):
-        self.button_done.configure(state = state)
+        self.button_done.configure(state=state)
 
     def set_answer(self, answer_list):
         for i, key in enumerate(self.keys):
@@ -101,13 +101,13 @@ class WidgetScore(Widget):
                     answer = str(answer_list[i])
                     for j in range(len(label_list)):
                         if j < len(answer):
-                            label_list[j].configure(text = answer[j])
+                            label_list[j].configure(text=answer[j])
                         else:
-                            label_list[j].configure(text = '')  # 空欄で初期化
+                            label_list[j].configure(text='')  # 空欄で初期化
                 else:
                     # 答えがない場合はすべて空欄に初期化
                     for label in label_list:
-                        label.configure(text = '')
+                        label.configure(text='')
 
     def set_result_buttons_state(self, result_list):
         for i, key in enumerate(self.keys):
@@ -115,10 +115,6 @@ class WidgetScore(Widget):
                 self.scoring_answer_buttons[key].configure(state=ctk.NORMAL)
             else:
                 self.scoring_answer_buttons[key].configure(state=ctk.DISABLED)
-
-    def set_scoring_clear(self):
-        for key in self.keys:
-            self.scoring_answer_buttons[key].configure(text = '―')
 
     def set_scoring_result(self, result_list):
         for i, key in enumerate(self.keys):
@@ -138,15 +134,19 @@ class WidgetScore(Widget):
                 else:
                     text = '―'
 
-            self.scoring_answer_buttons[key].configure(text = text)
+            self.scoring_answer_buttons[key].configure(text=text)
+
+    def set_scoring_clear(self):
+        for key in self.keys:
+            self.scoring_answer_buttons[key].configure(text='―')
 
     def event_on_scoring_button_click(self, key):
         if self.scoring_answer_buttons[key].cget('text') != '○':
             # 現在のボタン表示が「○」でない場合は「○」に変更（正解としてマーク）
-            self.scoring_answer_buttons[key].configure(text = '○')
+            self.scoring_answer_buttons[key].configure(text='○')
         else:
             # すでに「○」の場合は「×」に変更（不正解としてマーク）
-            self.scoring_answer_buttons[key].configure(text = '×')
+            self.scoring_answer_buttons[key].configure(text='×')
 
         self.status_callback(self.Event_OnScoringButtonClick)
 
@@ -157,7 +157,7 @@ class WidgetScore(Widget):
             button = self.scoring_answer_buttons[key]
             if button.cget('state') == 'disabled':
                 continue
-            self.scoring_answer_buttons[key].configure(text = '○')
+            self.scoring_answer_buttons[key].configure(text='○')
 
         self.status_callback(self.Event_OnAllCorrectClicked)
 
@@ -168,7 +168,7 @@ class WidgetScore(Widget):
             button = self.scoring_answer_buttons[key]
             if button.cget('state') == 'disabled':
                 continue
-            self.scoring_answer_buttons[key].configure(text = '×')
+            self.scoring_answer_buttons[key].configure(text='×')
 
         self.status_callback(self.Event_OnAllIncorrectClicked)
 

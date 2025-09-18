@@ -1,5 +1,5 @@
 class LoggerMixin:
-    def __init__(self, debug = False):
+    def __init__(self, debug=False):
         # デバッグ情報を表示する場合はTrue
         self.Debug = debug
 

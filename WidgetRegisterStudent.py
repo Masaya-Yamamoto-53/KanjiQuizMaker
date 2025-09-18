@@ -11,7 +11,7 @@ class WidgetRegisterStudent(Widget):
         self.register_student_button = None
 
     # 「生徒登録」ウィジェット作成
-    def create(self, frame, row, column):
+    def build_ui(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
         self.create_label(frame, 0, 0, u'生徒登録')
         self.student_name_entry = self.create_entry(
@@ -29,25 +29,22 @@ class WidgetRegisterStudent(Widget):
             , u'登録'
             , self.event_register_student
         )
+        # 「登録」ボタンを有効化
+        self.register_student_button.configure(state=ctk.NORMAL)
 
     # 「生徒登録」エントリーの値を取得
-    def get_student_name_entry(self):
+    def get_student_name_from_ui(self):
         return self.student_name_entry.get()
 
     # 「生徒登録」エントリーの値を削除
-    def clear_student_name_entry(self):
+    def clear_student_name_from_ui(self):
         self.student_name_entry.delete(0, ctk.END)
-
-    # 登録ボタンの状態を変更
-    def set_button_state(self, state):
-        if self.register_student_button:
-            self.register_student_button.configure(state = state)
 
     # イベント発生条件：「登録」ボタンを押したとき
     # 処理概要：「生徒登録」エントリーに記入した名前を設定ファイルに登録する
     def event_register_student(self):
         # 「生徒登録」エントリーが空欄のとき、エラーを通知する
-        student_name = self.get_student_name_entry()
+        student_name = self.get_student_name_from_ui()
         if not student_name:
             msgbox.showerror('Error', u'名前を入力してください')
             return
@@ -62,7 +59,7 @@ class WidgetRegisterStudent(Widget):
 
         # 設定ファイルに生徒を登録した後に登録できたことを伝えるため、「生徒登録」エントリーを空欄にする
         # 煩わしいため、メッセージボックスは使用しない
-        self.clear_student_name_entry()
+        self.clear_student_name_from_ui()
 
         # UIや状態の更新処理（ボタンの有効化など）
         self.status_callback(self.Event_RegisterStudent)

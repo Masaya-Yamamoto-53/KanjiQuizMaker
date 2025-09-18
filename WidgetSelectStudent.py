@@ -7,12 +7,11 @@ class WidgetSelectStudent(Widget):
         super().__init__()
         self.setting_file = setting_file
         self.status_callback = status_callback
-
         self.select_student_combobox_value = None
         self.select_student_combobox = None
 
-    # 生徒選択
-    def create(self, frame, row, column):
+    # 「生徒選択」ウィジェット作成
+    def build_ui(self, frame, row, column):
         frame = self.create_frame(frame, row, column, None)
         self.create_label(frame, 0, 0, u'生徒選択')
         self.create_combobox(frame, 1, 0)
@@ -24,6 +23,7 @@ class WidgetSelectStudent(Widget):
             , 'delete_student_button'
         )
 
+    # 生徒選択用のコンボボックスを生成・配置する
     def create_combobox(self, frame, row, column):
         if self.setting_file.is_empty():
             values = [u'']
@@ -33,38 +33,40 @@ class WidgetSelectStudent(Widget):
         self.select_student_combobox_value = ctk.StringVar(value=values[0])
         self.select_student_combobox = ctk.CTkOptionMenu(
               frame
-            , values = values
-            , variable = self.select_student_combobox_value
-            , command = self.event_select_student
-            , width = 200
-            , height = 36
+            , values=values
+            , variable=self.select_student_combobox_value
+            , command=self.event_select_student
+            , width=200
+            , height=36
         )
-        self.select_student_combobox.grid(row = row, column = column, padx = 5, pady = 5, sticky = 'nesw')
+        self.select_student_combobox.grid(row=row, column=column, padx=5, pady=5, sticky='nesw')
 
     # 「生徒選択」コンボボックスを取得する
-    def get_student_name(self):
+    def get_student_name_from_ui(self):
         return self.select_student_combobox_value.get()
 
     # 「生徒選択」コンボボックスを設定する
-    def set_student_name(self, student_name):
-        self.select_student_combobox_value.set(student_name)
+    def set_student_name_from_ui(self, student_namelist):
+        self.select_student_combobox.configure(values=student_namelist)
 
-    def set_combobox(self, student_namelist):
-        self.select_student_combobox.configure(values = student_namelist)
+    # 「生徒選択」コンボボックスの現在値を消去する
+    def clear_student_name_from_combobox(self):
+        self.select_student_combobox_value.set(student_name='')
 
-    def set_button_state(self, state):
-        getattr(self, 'delete_student_button').configure(state = state)
+    # 「削除」ボタンの状態を変更
+    def set_delete_student_button_state(self, state):
+        getattr(self, 'delete_student_button').configure(state=state)
 
     # イベント発生条件：「削除」ボタンを押したとき
     # 処理概要：「生徒選択」コンボボックスに記入している生徒を削除する
     def event_delete_student(self):
-        student_name = self.get_student_name()
+        student_name = self.get_student_name_from_ui()
         # 生徒名が有効なとき
         if len(student_name) > 0:
             msg = msgbox.askquestion('Warning', u'本当に削除しますか', default='no')
             if msg == 'yes':
                 self.setting_file.delete_student(student_name)
-                self.set_student_name('')
+                self.clear_student_name_from_combobox()
 
         # UIや状態の更新処理（ボタンの有効化など）
         self.status_callback(self.Event_DeleteStudent)
