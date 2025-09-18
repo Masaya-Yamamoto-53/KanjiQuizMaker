@@ -171,7 +171,7 @@ class KanjiQuizMaker(Widget):
             if state == ctk.NORMAL:
                 # 「問題集選択」エントリーにパスを表示する
                 self.select_worksheet.set_path_of_worksheet_from_ui(
-                    self.setting_file.get_worksheet_path(student_name)
+                    self.setting_file.get_path_of_worksheet(student_name)
                 )
                 # 「出題範囲選択」のチェックボタンの有効化とチェックボタンの更新
                 self.select_grade.enable_grade()

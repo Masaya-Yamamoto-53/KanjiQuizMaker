@@ -58,7 +58,7 @@ class WidgetSelectWorksheet(Widget):
 
         # 設定ファイルに相対パスを登録する
         path = os.path.relpath(path)
-        self.setting_file.set_path_of_worksheet_from_ui(
+        self.setting_file.set_path_of_worksheet(
               self.select_student.get_student_name_from_ui()
             , path
         )

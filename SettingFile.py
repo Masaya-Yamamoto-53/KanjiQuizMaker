@@ -82,12 +82,12 @@ class SettingFile:
         return self.setting_file[self.STUDENT_NAME].values.tolist()
 
     # 生徒に紐づくワークシートのパスを取得
-    def get_worksheet_path(self, student_name):
+    def get_path_of_worksheet(self, student_name):
         mask = self.setting_file[self.STUDENT_NAME] == student_name
         return self.setting_file.loc[mask, self.WORKSHEET_PATH].iloc[0]
 
     # 生徒に紐づくワークシートのパスを更新
-    def set_worksheet_path(self, student_name, path):
+    def set_path_of_worksheet(self, student_name, path):
         mask = self.setting_file[self.STUDENT_NAME] == student_name
         self.setting_file[self.WORKSHEET_PATH] = self.setting_file[self.WORKSHEET_PATH].astype(str)
         self.setting_file.loc[mask, self.WORKSHEET_PATH] = path

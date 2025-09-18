@@ -49,7 +49,7 @@ class GenerateQuiz(LoggerMixin):
         # PDFを作成する
         num = len(quiz)
         print(quiz[worksheet.Problem])
-        self.output_quiz.create(path, student_name, self.create_date, num, quiz[worksheet.Problem])
+        self.output_quiz.output_quiz(path, student_name, self.create_date, num, quiz[worksheet.Problem])
 
         return raw_quiz
 
