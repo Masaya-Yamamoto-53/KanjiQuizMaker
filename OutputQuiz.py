@@ -243,7 +243,7 @@ class OutputQuiz:
 
     # 漢字プリントの問題文の枠を書く.
     def draw_frame(self, x_pos, y_pos, frame_num=0, string=u''):
-        y_pos -= (self.rect_size + self.ProbFontSize) / 1.8
+        y_pos -= (self.rect_size + self.ProbFontSize) / 2
 
         # 枠内を点線で十字の線を記述する.
         self.page.setLineWidth(0.8)
@@ -254,13 +254,13 @@ class OutputQuiz:
               x_pos + (self.rect_size / 2)
             , y_pos
             , x_pos + (self.rect_size / 2)
-            , y_pos + self.rect_size
+            , y_pos +  self.rect_size
         )
         # 横
         self.page.line(
               x_pos
             , y_pos + (self.rect_size / 2)
-            , x_pos + self.rect_size
+            , x_pos +  self.rect_size
             , y_pos + (self.rect_size / 2)
         )
 
@@ -282,9 +282,8 @@ class OutputQuiz:
             elif len(string) == 5:  # 文字数が4の場合
                 y_pos = y_pos + (self.rect_size * frame_num)# * 0.90
             else:
-                y_pos = y_pos + self.rect_size
+                y_pos = y_pos + (self.rect_size * frame_num)
 
-        x_space = 2  # 枠にピッタリ付かないように少し間を空ける.
         next_print_pos = 0
         for word in string:
             if word == u'ゃ' or word == u'ゅ' or word == u'ょ' or word == u'っ':
@@ -303,27 +302,32 @@ class OutputQuiz:
             std_x_pos = x_pos + self.rect_size
             std_y_pos = y_pos + self.rect_size * (1 + 0.05) - self.ProbFrameSize
 
-            # フリガナの文字数によって、間隔を空ける.
-            if len(string) == 1:  # 文字数が1の場合
-                y_bias = 0
+            # フリガナの文字数によって、間隔を空ける
+            y_bias = 0
+            start_pos = 0
+            if len(string) == 1:
                 start_pos = 0
-            elif len(string) == 2:  # 文字数が2の場合
-                y_bias = 2 * (frame_num + 1)
+                y_bias = 0
+            elif len(string) == 2:
                 start_pos = -(self.rect_size / 5)
-            elif len(string) == 3:  # 文字数が3の場合
+                y_bias = 2 * (frame_num + 1)
+            elif len(string) == 3:
+                start_pos = -(self.rect_size / 3)
                 y_bias = 1.5 * (frame_num + 1)
+            elif len(string) == 4:
                 start_pos = -(self.rect_size / 3)
-            elif len(string) == 4:  # 文字数が4の場合
                 y_bias = 1 * (frame_num + 1)
-                start_pos = -(self.rect_size / 3)
-            else:
-                y_bias = 1 * (frame_num + 1)
+            elif len(string) == 5:
                 start_pos = -(self.rect_size / 2.2)
+                y_bias = 1 * (frame_num + 1)
+            else:
+                start_pos = -(self.rect_size / 1.8)
+                y_bias = 1 * (frame_num + 1)
 
             y_start_offset = self.rect_size / 2 - font_size / 2 + start_pos
 
             self.page.drawString(
-                std_x_pos + cs_x_offset + x_space
+                  std_x_pos + cs_x_offset
                 , std_y_pos - next_print_pos - y_start_offset
                 , word
             )
