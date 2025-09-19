@@ -205,105 +205,40 @@ class OutputQuiz:
         # 直前の漢字の右隣にルビを振るため, 1文字分だけ移動する.
         x_pos = x_pos + self.ProbFontSize
 
-        # 直前の漢字にルビを振るため, 文字分だけ移動する.
-        if len(kanji) == 1:
-            y_pos = y_pos + self.ProbFontSize
-        elif len(kanji) == 2:
-            y_pos = y_pos + self.ProbFontSize * 1.5
-        elif len(kanji) == 3:
-            y_pos = y_pos + self.ProbFontSize * 2.0
-        else:
-            y_pos = y_pos + self.ProbFontSize * 2.5
-
-        # ルビの文字サイズを問題文の 1/3 にする.
-        font_size = self.ProbFontSize / 3
+        # ルビの文字サイズを問題文の 1/3 にする(小数点第一位で四捨五入)
+        font_size = int(self.ProbFontSize / 3 + 0.5)
         self.page.setFont(self.Font, font_size)
 
-        # ルビの文字数によって, 縦軸の描写位置を変更する.
-        if len(string) == 1:
-            y_start_offset = self.ProbFontSize / 4  # ルビ描写開始オフセット(文字数によって開始位置をずらす) 14 / 4 =
-            y_pos_offset = self.ProbFontSize        # ルビが 1文字 のときの間隔
-        elif len(string) == 2:
-            y_start_offset = self.ProbFontSize / 2  # ルビ描写開始オフセット(文字数によって開始位置をずらす)
-            y_pos_offset = self.ProbFontSize / 2    # ルビが 2文字 のときの間隔
-        elif len(string) == 3:
-            y_start_offset = self.ProbFontSize / 5 * 3  # ルビ描写開始オフセット(文字数によって開始位置をずらす)
-            y_pos_offset = self.ProbFontSize / 3        # ルビが 3文字 のときの間隔
-        elif len(string) == 4:
-            y_start_offset = self.ProbFontSize / 4 * 3  # ルビ描写開始オフセット(文字数によって開始位置をずらす)
-            y_pos_offset = self.ProbFontSize / 3        # ルビが 4文字 以外のときの間隔
-        elif len(string) == 5:
-            y_start_offset = self.ProbFontSize - 1  # ルビ描写開始オフセット(文字数によって開始位置をずらす)
-            y_pos_offset = self.ProbFontSize / 3        # ルビが 4文字 以外のときの間隔
-        elif len(string) == 6:
-            y_start_offset = self.ProbFontSize + 1  # ルビ描写開始オフセット(文字数によって開始位置をずらす)
-            y_pos_offset = self.ProbFontSize / 3  # ルビが 4文字 以外のときの間隔
-
-        # 熟字訓に対応
+        # 直前の漢字にルビを振るため, 文字分だけ移動する.
+        font_size_quot = self.ProbFontSize / 4
         if len(kanji) == 1:
-            y_start_offset = y_start_offset
-            y_pos_offset = y_pos_offset
-        elif len(kanji) == 2:
+            y_pos += self.ProbFontSize * len(kanji) + font_size_quot * 2 - font_size / 2
             if len(string) == 1:
-                y_start_offset = y_start_offset
-                y_pos_offset = y_pos_offset
-            if len(string) == 2:
-                y_start_offset = y_start_offset * 1.5
-                y_pos_offset = y_pos_offset * 2
-            elif len(string) == 3:
-                y_start_offset = y_start_offset * 1.5
-                y_pos_offset = y_pos_offset * 2
-            elif len(string) == 4:
-                y_start_offset = y_start_offset * 1.5 - 1
-                y_pos_offset = y_pos_offset * 1.5
-            elif len(string) == 5:
-                y_start_offset = y_start_offset
-                y_pos_offset = y_pos_offset
-            else:
-                y_start_offset = y_start_offset
-                y_pos_offset = y_pos_offset
-        elif len(kanji) == 3:
-            if len(string) == 1:
-                y_start_offset = y_start_offset
-                y_pos_offset = y_pos_offset
+                y_pos = y_pos
+                y_pos_offset = font_size
             elif len(string) == 2:
-                y_start_offset = y_start_offset * 1.5
-                y_pos_offset = y_pos_offset * 2
+                y_pos = y_pos + font_size
+                y_pos_offset = font_size * 2
             elif len(string) == 3:
-                y_start_offset = y_start_offset * 1.5
-                y_pos_offset = y_pos_offset * 2
+                y_pos = y_pos + font_size
+                y_pos_offset = font_size
             elif len(string) == 4:
-                y_start_offset = y_start_offset * 1.5 + 1
-                y_pos_offset = y_pos_offset * 2
+                y_pos = y_pos + font_size + font_size / 2
+                y_pos_offset = font_size
             elif len(string) == 5:
-                y_start_offset = y_start_offset * 1.5 + 1
-                y_pos_offset = y_pos_offset * 1.8
+                y_pos = y_pos + font_size * 2
+                y_pos_offset = font_size
             elif len(string) == 6:
-                y_start_offset = y_start_offset * 1.5 - 2
-                y_pos_offset = y_pos_offset * 1.4
+                y_pos = y_pos + font_size * 3 - font_size / 2
+                y_pos_offset = font_size
         else:
-            if len(string) == 1:
-                y_start_offset = y_start_offset
-                y_pos_offset = y_pos_offset
-            elif len(string) == 2:
-                y_start_offset = y_start_offset * 2.5 - 6
-                y_pos_offset = y_pos_offset * 2
-            elif len(string) == 3:
-                y_start_offset = y_start_offset * 2.5 - 8
-                y_pos_offset = y_pos_offset * 2
-            elif len(string) == 4:
-                y_start_offset = y_start_offset * 2.5 - 8
-                y_pos_offset = y_pos_offset * 2
-            elif len(string) == 5:
-                y_start_offset = y_start_offset * 2.5 - 10
-                y_pos_offset = y_pos_offset * 2
-            elif len(string) == 6:
-                y_start_offset = y_start_offset * 2.5 - 10
-                y_pos_offset = y_pos_offset * 2
+            y_pos = y_pos + self.ProbFontSize * (1 + len(kanji) * 0.5) - font_size / 2
+            y_pos_offset = self.ProbFontSize * len(kanji) / len(string)
+            y_pos = y_pos + y_pos_offset * (len(string) - 1) / 2
 
         # ルビを記述する.
         for word in string:
-            self.draw_string(x_pos, y_pos + y_start_offset, font_size, word)
+            self.draw_string(x_pos, y_pos, font_size, word)
             y_pos -= y_pos_offset
 
     # 漢字プリントの問題文の枠を書く.

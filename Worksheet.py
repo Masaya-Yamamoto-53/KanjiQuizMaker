@@ -69,13 +69,13 @@ class Worksheet(LoggerMixin):
             except pd.errors.EmptyDataError:
                 error_message.append(self.print_error(u'問題集が空です'))
 
+            # 学年ごとの出題漢字リストを作成する
+            self.create_kanji_list()
+
         else:
             # ファイルが存在しない
             self.worksheet = pd.DataFrame()
             error_message.append(self.print_info('問題集(' + path + ')の読み込みに失敗しました'))
-
-        # 学年ごとの出題漢字リストを作成する
-        self.create_kanji_list()
 
         return len(error_message), error_message
 

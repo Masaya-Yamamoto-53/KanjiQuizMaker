@@ -245,7 +245,7 @@ class WidgetSelectGrade(Widget):
             # 該当学年のチェック状態を取得（True/False）
             checked = self.get_grade_from_ui(key)
             # 生徒名と学年に対応する設定を保存
-            self.setting_file.set_grade_from_ui(self.select_student.get_student_name_from_ui(), key, checked)
+            self.setting_file.set_grade(self.select_student.get_student_name_from_ui(), key, checked)
 
         # UIや状態の更新処理（ボタンの有効化など）
         self.status_callback(self.Event_CheckButton)
