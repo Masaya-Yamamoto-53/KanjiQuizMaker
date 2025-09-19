@@ -228,7 +228,7 @@ class OutputQuiz:
             elif len(string) == 5:
                 y_pos = y_pos + font_size * 2
                 y_pos_offset = font_size
-            elif len(string) == 6:
+            else:
                 y_pos = y_pos + font_size * 3 - font_size / 2
                 y_pos_offset = font_size
         else:
