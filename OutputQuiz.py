@@ -272,22 +272,22 @@ class OutputQuiz:
 
         if frame_num > 0:
             if len(string) == 1:  # 文字数が1の場合
-                y_pos = y_pos + (self.rect_size * frame_num)# * 0.5
+                y_pos = y_pos + (self.rect_size * frame_num) * 0.5
             elif len(string) == 2:  # 文字数が2の場合
-                y_pos = y_pos + (self.rect_size * frame_num)# * 0.75
+                y_pos = y_pos + (self.rect_size * frame_num) * 0.75
             elif len(string) == 3:  # 文字数が3の場合
-                y_pos = y_pos + (self.rect_size * frame_num)# * 0.75
+                y_pos = y_pos + (self.rect_size * frame_num) * 0.85
             elif len(string) == 4:  # 文字数が4の場合
-                y_pos = y_pos + (self.rect_size * frame_num)# * 0.75
+                y_pos = y_pos + (self.rect_size * frame_num) * 0.85
             elif len(string) == 5:  # 文字数が4の場合
-                y_pos = y_pos + (self.rect_size * frame_num)# * 0.90
+                y_pos = y_pos + (self.rect_size * frame_num) * 0.95
             else:
                 y_pos = y_pos + (self.rect_size * frame_num)
 
         next_print_pos = 0
         for word in string:
             if word == u'ゃ' or word == u'ゅ' or word == u'ょ' or word == u'っ':
-                # 拗音(contracted sound)のオフセット
+                # 拗音のオフセット
                 cs_x_offset = self.ProbFrameSize / 10 * 3
                 cs_y_offset = 5
                 font_size = self.ProbFrameSize / 10 * 8
@@ -298,31 +298,29 @@ class OutputQuiz:
                 font_size = self.ProbFrameSize
                 self.page.setFont(self.Font, font_size)
 
-            # 問題枠の右端に位置を調整する.
+            # 問題枠の右端に位置を調整する
             std_x_pos = x_pos + self.rect_size
             std_y_pos = y_pos + self.rect_size * (1 + 0.05) - self.ProbFrameSize
 
             # フリガナの文字数によって、間隔を空ける
-            y_bias = 0
-            start_pos = 0
             if len(string) == 1:
                 start_pos = 0
                 y_bias = 0
             elif len(string) == 2:
                 start_pos = -(self.rect_size / 5)
-                y_bias = 2 * (frame_num + 1)
+                y_bias = (frame_num + 1) * 2
             elif len(string) == 3:
                 start_pos = -(self.rect_size / 3)
-                y_bias = 1.5 * (frame_num + 1)
+                y_bias = (frame_num + 1) * 1.5
             elif len(string) == 4:
                 start_pos = -(self.rect_size / 3)
-                y_bias = 1 * (frame_num + 1)
+                y_bias = (frame_num + 1)
             elif len(string) == 5:
                 start_pos = -(self.rect_size / 2.2)
-                y_bias = 1 * (frame_num + 1)
+                y_bias = (frame_num + 1)
             else:
                 start_pos = -(self.rect_size / 1.8)
-                y_bias = 1 * (frame_num + 1)
+                y_bias = (frame_num + 1)
 
             y_start_offset = self.rect_size / 2 - font_size / 2 + start_pos
 
