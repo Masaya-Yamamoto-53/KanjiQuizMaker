@@ -242,38 +242,47 @@ class OutputQuiz:
             y_pos -= y_pos_offset
 
     # 漢字プリントの問題文の枠を書く.
-    def draw_frame(self, x_pos, y_pos, size, frame_num=0, string=u''):
-        rect_width = size
-        rect_height = size
-
-        y_pos -= (size + self.ProbFontSize) / 1.8
+    def draw_frame(self, x_pos, y_pos, frame_num=0, string=u''):
+        y_pos -= (self.rect_size + self.ProbFontSize) / 1.8
 
         # 枠内を点線で十字の線を記述する.
         self.page.setLineWidth(0.8)
         self.page.setStrokeColor('silver')
         self.page.setDash([2])
-        self.page.line(x_pos + (rect_width / 2), y_pos, x_pos + (rect_width / 2), y_pos + rect_height)  # 縦
-        self.page.line(x_pos, y_pos + (rect_height / 2), x_pos + rect_width, y_pos + (rect_height / 2))  # 横
+        # 縦
+        self.page.line(
+              x_pos + (self.rect_size / 2)
+            , y_pos
+            , x_pos + (self.rect_size / 2)
+            , y_pos + self.rect_size
+        )
+        # 横
+        self.page.line(
+              x_pos
+            , y_pos + (self.rect_size / 2)
+            , x_pos + self.rect_size
+            , y_pos + (self.rect_size / 2)
+        )
 
         # 枠
         self.page.setStrokeColor('gray')
         self.page.setLineWidth(1)
         self.page.setDash([])
-        self.page.rect(x_pos, y_pos, rect_width, rect_height, fill=False)
+        self.page.rect(x_pos, y_pos, self.rect_size, self.rect_size, fill=False)
 
         if frame_num > 0:
             if len(string) == 1:  # 文字数が1の場合
-                y_pos = y_pos + (rect_height * frame_num)# * 0.5
+                y_pos = y_pos + (self.rect_size * frame_num)# * 0.5
             elif len(string) == 2:  # 文字数が2の場合
-                y_pos = y_pos + (rect_height * frame_num)# * 0.75
+                y_pos = y_pos + (self.rect_size * frame_num)# * 0.75
             elif len(string) == 3:  # 文字数が3の場合
-                y_pos = y_pos + (rect_height * frame_num)# * 0.75
+                y_pos = y_pos + (self.rect_size * frame_num)# * 0.75
             elif len(string) == 4:  # 文字数が4の場合
-                y_pos = y_pos + (rect_height * frame_num)# * 0.75
+                y_pos = y_pos + (self.rect_size * frame_num)# * 0.75
             elif len(string) == 5:  # 文字数が4の場合
-                y_pos = y_pos + (rect_height * frame_num)# * 0.90
+                y_pos = y_pos + (self.rect_size * frame_num)# * 0.90
             else:
-                y_pos = y_pos + rect_height
+                y_pos = y_pos + self.rect_size
 
         x_space = 2  # 枠にピッタリ付かないように少し間を空ける.
         next_print_pos = 0
@@ -291,8 +300,8 @@ class OutputQuiz:
                 self.page.setFont(self.Font, font_size)
 
             # 問題枠の右端に位置を調整する.
-            std_x_pos = x_pos + rect_width
-            std_y_pos = y_pos + rect_height * (1 + 0.05) - self.ProbFrameSize
+            std_x_pos = x_pos + self.rect_size
+            std_y_pos = y_pos + self.rect_size * (1 + 0.05) - self.ProbFrameSize
 
             # フリガナの文字数によって、間隔を空ける.
             if len(string) == 1:  # 文字数が1の場合
@@ -348,10 +357,10 @@ class OutputQuiz:
                         fflg = 1
                     if not chk:
                         if len(arr) <= 0:
-                            self.draw_frame(self.problem_text_frame[idx] - self.rect_size / 3, y_pos, self.rect_size, 0, arr)
+                            self.draw_frame(self.problem_text_frame[idx] - self.rect_size / 3, y_pos, 0, arr)
                             frame_num += 1
                         else:
-                            self.draw_frame(self.problem_text_frame[idx] - self.rect_size / 3, y_pos, self.rect_size, frame_num, arr)
+                            self.draw_frame(self.problem_text_frame[idx] - self.rect_size / 3, y_pos, frame_num, arr)
                             frame_num = 0
                     frame_stt = kFrameSttEnd
                     arr = []
