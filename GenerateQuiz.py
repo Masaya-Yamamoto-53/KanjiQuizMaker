@@ -144,14 +144,13 @@ class GenerateQuiz(LoggerMixin):
         # 出題対象の漢字のみにする
         kanji_filtered = worksheet.filter_by_checked_kanji(grade_filtered, grade, kanji_list)
         # 間違えた問題のインデックスを取得
-        self.list_x = worksheet.get_quiz(kanji_filtered, worksheet.IncrctMk, grade, self.create_date, shuffle = True, days = 0)
-        print(self.list_x)
+        self.list_x = worksheet.get_quiz(kanji_filtered, worksheet.IncrctMk, self.create_date, shuffle=True, days=0)
         # 昨日間違えた問題のインデックスを取得する
-        self.list_d = worksheet.get_quiz(kanji_filtered, worksheet.DayMk, grade, self.create_date, shuffle = True, days = 1)
+        self.list_d = worksheet.get_quiz(kanji_filtered, worksheet.DayMk, self.create_date, shuffle=True, days=1)
         # 一週間前に間違えた問題のインデックスを取得する
-        self.list_w = worksheet.get_quiz(kanji_filtered, worksheet.WeekMk, grade, self.create_date, shuffle = True, days = 7 - 1)
+        self.list_w = worksheet.get_quiz(kanji_filtered, worksheet.WeekMk, self.create_date, shuffle=True, days=7-1)
         # 一ヶ月前に間違えた問題のインデックスを取得する
-        self.list_m = worksheet.get_quiz(kanji_filtered, worksheet.MonthMk, grade, self.create_date, shuffle = True, days = 7 * 3)
+        self.list_m = worksheet.get_quiz(kanji_filtered, worksheet.MonthMk, self.create_date, shuffle=True, days=7*3)
 
         # 問題を連結する
         # 優先順位：
@@ -172,14 +171,14 @@ class GenerateQuiz(LoggerMixin):
         else:
             # 間違えた問題だけでは不足している場合
             # まだ出題していない問題を抽出する
-            self.list_n = worksheet.get_quiz(kanji_filtered, worksheet.NotMk, grade, self.create_date, shuffle = True)
+            self.list_n = worksheet.get_quiz(kanji_filtered, worksheet.NotMk, grade, self.create_date, shuffle=True)
             quiz = pd.concat([quiz, self.list_n], ignore_index=True)
 
             num_t = num_t - len(self.list_n[0:num])
             if num_t > 0:
                 # 未出題の問題だけでは確保できなかった場合
                 # 既に出題し、正解している問題を候補にする
-                self.list_o = worksheet.get_quiz(kanji_filtered, worksheet.CrctMk, grade, self.create_date, shuffle = True)
+                self.list_o = worksheet.get_quiz(kanji_filtered, worksheet.CrctMk, grade, self.create_date, shuffle=True)
                 quiz = pd.concat([quiz, self.list_o], ignore_index=True)
 
         # 出題をnum数にする

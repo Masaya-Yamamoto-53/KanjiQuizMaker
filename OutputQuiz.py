@@ -3,6 +3,8 @@ from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import A4, landscape
+from reportlab.rl_settings import spaceShrinkage
+
 
 # 文字が漢字であるか否かを評価する.
 def is_kanji(char):
@@ -58,8 +60,6 @@ class OutputQuiz:
         for i in range(0, self.ColNumMax):
             pos = self.ProblemXStartPos - step * i
             self.problem_text_frame.append(pos)
-
-        print(self.problem_text_frame)
 
         # PDF設定
         self.page = canvas.Canvas(path, pagesize=landscape(A4))
@@ -202,17 +202,16 @@ class OutputQuiz:
         return y_pos
 
     def draw_ruby(self, x_pos, y_pos, kanji, string=u''):
-        # 直前の漢字の右隣にルビを振るため, 1文字分だけ移動する.
+        # 直前の漢字の右隣にルビを振るため、1文字分だけ移動する
         x_pos = x_pos + self.ProbFontSize
 
         # ルビの文字サイズを問題文の 1/3 にする(小数点第一位で四捨五入)
         font_size = int(self.ProbFontSize / 3 + 0.5)
         self.page.setFont(self.Font, font_size)
 
-        # 直前の漢字にルビを振るため, 文字分だけ移動する.
-        font_size_quot = self.ProbFontSize / 4
+        # 直前の漢字にルビを振るため、文字分だけ移動する
         if len(kanji) == 1:
-            y_pos += self.ProbFontSize * len(kanji) + font_size_quot * 2 - font_size / 2
+            y_pos = y_pos + self.ProbFontSize * len(kanji) + self.ProbFontSize / 2 - font_size / 2 - font_size / 8
             if len(string) == 1:
                 y_pos = y_pos
                 y_pos_offset = font_size
@@ -232,20 +231,22 @@ class OutputQuiz:
                 y_pos = y_pos + font_size * 3 - font_size / 2
                 y_pos_offset = font_size
         else:
+            # 熟字訓 対応
             y_pos = y_pos + self.ProbFontSize * (1 + len(kanji) * 0.5) - font_size / 2
             y_pos_offset = self.ProbFontSize * len(kanji) / len(string)
             y_pos = y_pos + y_pos_offset * (len(string) - 1) / 2
 
-        # ルビを記述する.
+        # ルビを記述する
         for word in string:
             self.draw_string(x_pos, y_pos, font_size, word)
             y_pos -= y_pos_offset
 
-    # 漢字プリントの問題文の枠を書く.
+    # 漢字プリントの問題文の枠を書く
     def draw_frame(self, x_pos, y_pos, frame_num=0, string=u''):
-        y_pos -= (self.rect_size + self.ProbFontSize) / 2
+        # 問題文の文字よりも漢字枠の方が大きいため、直前の文字との間隔をもう少し開ける
+        y_pos -= (self.rect_size + self.ProbFontSize) / 1.8
 
-        # 枠内を点線で十字の線を記述する.
+        # 枠内を点線で十字の線を記述する
         self.page.setLineWidth(0.8)
         self.page.setStrokeColor('silver')
         self.page.setDash([2])
@@ -324,8 +325,9 @@ class OutputQuiz:
 
             y_start_offset = self.rect_size / 2 - font_size / 2 + start_pos
 
+            space = self.rect_size / 32 # 漢字枠より少し話した位置にする
             self.page.drawString(
-                  std_x_pos + cs_x_offset
+                  std_x_pos + cs_x_offset + space
                 , std_y_pos - next_print_pos - y_start_offset
                 , word
             )

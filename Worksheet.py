@@ -234,7 +234,7 @@ class Worksheet(LoggerMixin):
         return filtered
 
     # 条件に該当する問題集のインデックスを返す
-    def get_quiz(self, worksheet, result, grade, create_date, shuffle = False, days = -1):
+    def get_quiz(self, worksheet, result, create_date, shuffle = False, days = -1):
         # 毎日同じ時間帯に学習する場合、前日に間違えた問題が抽出されない可能性があるため、
         # 判定時間に2時間のオフセットを加える。
         now_time = create_date + datetime.timedelta(hours = 6)
